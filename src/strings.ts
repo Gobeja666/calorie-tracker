@@ -63,6 +63,11 @@ export const t = {
     hint: 'Log your weight to see the graph',
     cancel: 'Cancel',
     save: 'Save',
+    edit: 'Edit',
+    editTitle: 'Edit weights',
+    date: 'Date',
+    close: 'Close',
+    noEntries: 'No weights logged yet',
   },
     // Day picker
   days: {

@@ -1,13 +1,20 @@
 import { useState } from 'react';
-import { View, Text, TextInput, Pressable, Modal, StyleSheet } from 'react-native';
-import Svg, { Polyline, Circle, Line } from 'react-native-svg';
-import { useWeight } from './WeightContext';
+import {
+  Modal,
+  Pressable,
+  ScrollView, StyleSheet,
+  Text, TextInput,
+  View,
+} from 'react-native';
+import Svg, { Circle, Line, Polyline } from 'react-native-svg';
 import { useProfile } from './ProfileContext';
 import { t } from './strings';
+import { useWeight } from './WeightContext';
 
 const CHART_H = 140;
 const PAD = 14;
 const SAMPLE = [0.3, 0.38, 0.35, 0.5, 0.58, 0.7]; // heights of the sample dots
+const DAYS_BACK = 60;
 
 function formatDate(iso: string) {
   const d = new Date(iso);
@@ -15,25 +22,39 @@ function formatDate(iso: string) {
 }
 
 export default function WeightCard() {
-  const { entries, addWeight } = useWeight();
+  const { entries, addWeight, removeWeight } = useWeight();
   const { profile } = useProfile();
 
   const [open, setOpen] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
   const [input, setInput] = useState('');
+  const [daysAgo, setDaysAgo] = useState(0); // 0 = today
   const [width, setWidth] = useState(0);
 
   const latest = entries.length > 0 ? entries[entries.length - 1].weight : null;
   const current = latest ?? profile?.weight ?? null;
 
+  const now = new Date();
+  const dayOptions = Array.from({ length: DAYS_BACK + 1 }, (_, i) => ({
+    daysAgo: i,
+    date: new Date(now.getFullYear(), now.getMonth(), now.getDate() - i),
+  }));
+  const selectedDate = dayOptions[daysAgo].date;
+  const selectedLabel =
+    daysAgo === 0
+      ? t.days.today
+      : `${selectedDate.getDate()} ${t.days.months[selectedDate.getMonth()]}`;
+
   function close() {
     setOpen(false);
     setInput('');
+    setDaysAgo(0);
   }
 
   function handleSave() {
     const w = parseFloat(input.replace(',', '.'));
     if (isNaN(w) || w <= 0) return;
-    addWeight(w);
+    addWeight(w, selectedDate);
     close();
   }
 
@@ -65,9 +86,16 @@ export default function WeightCard() {
             {current !== null && <Text style={styles.unit}>{t.weight.kg}</Text>}
           </Text>
         </View>
-        <Pressable style={styles.logBtn} onPress={() => setOpen(true)}>
-          <Text style={styles.logText}>{t.weight.logWeight}</Text>
-        </Pressable>
+        <View style={styles.buttons}>
+          {entries.length > 0 && (
+            <Pressable style={styles.editBtn} onPress={() => setEditOpen(true)}>
+              <Text style={styles.editText}>{t.weight.edit}</Text>
+            </Pressable>
+          )}
+          <Pressable style={styles.logBtn} onPress={() => setOpen(true)}>
+            <Text style={styles.logText}>{t.weight.logWeight}</Text>
+          </Pressable>
+        </View>
       </View>
 
       <View onLayout={(e) => setWidth(e.nativeEvent.layout.width)}>
@@ -134,10 +162,43 @@ export default function WeightCard() {
         )}
       </View>
 
+      {/* Log weight popup */}
       <Modal visible={open} transparent animationType="fade" onRequestClose={close}>
         <View style={styles.overlay}>
           <View style={styles.modal}>
             <Text style={styles.modalTitle}>{t.weight.logWeight}</Text>
+
+            <Text style={styles.fieldLabel}>
+              {t.weight.date}: {selectedLabel}
+            </Text>
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              style={{ flexGrow: 0 }}
+              contentContainerStyle={{ gap: 8 }}
+            >
+              {dayOptions.map(({ daysAgo: n, date }) => {
+                const active = n === daysAgo;
+                return (
+                  <Pressable
+                    key={n}
+                    style={[styles.day, active && styles.dayActive]}
+                    onPress={() => setDaysAgo(n)}
+                  >
+                    <Text style={[styles.weekday, active && styles.textActive]}>
+                      {t.days.weekdays[date.getDay()]}
+                    </Text>
+                    <Text style={[styles.dayNumber, active && styles.textActive]}>
+                      {date.getDate()}
+                    </Text>
+                    <Text style={[styles.weekday, active && styles.textActive]}>
+                      {t.days.months[date.getMonth()]}
+                    </Text>
+                  </Pressable>
+                );
+              })}
+            </ScrollView>
+
             <TextInput
               style={styles.input}
               placeholder={t.weight.weightPlaceholder}
@@ -157,6 +218,47 @@ export default function WeightCard() {
           </View>
         </View>
       </Modal>
+
+      {/* Edit (delete) popup */}
+      <Modal
+        visible={editOpen}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setEditOpen(false)}
+      >
+        <View style={styles.overlay}>
+          <View style={styles.modal}>
+            <Text style={styles.modalTitle}>{t.weight.editTitle}</Text>
+
+            <ScrollView style={{ maxHeight: 300 }}>
+              {entries.length === 0 ? (
+                <Text style={styles.hint}>{t.weight.noEntries}</Text>
+              ) : (
+                [...entries].reverse().map((e) => {
+                  const d = new Date(e.date);
+                  return (
+                    <View key={e.id} style={styles.item}>
+                      <Text style={styles.itemDate}>
+                        {d.getDate()} {t.days.months[d.getMonth()]} {d.getFullYear()}
+                      </Text>
+                      <Text style={styles.itemWeight}>
+                        {e.weight} {t.weight.kg}
+                      </Text>
+                      <Pressable onPress={() => removeWeight(e.id)}>
+                        <Text style={styles.remove}>✕</Text>
+                      </Pressable>
+                    </View>
+                  );
+                })
+              )}
+            </ScrollView>
+
+            <Pressable style={styles.saveBtn} onPress={() => setEditOpen(false)}>
+              <Text style={styles.saveText}>{t.weight.close}</Text>
+            </Pressable>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -167,6 +269,7 @@ const styles = StyleSheet.create({
   label: { color: '#666', fontSize: 12 },
   value: { fontSize: 28, fontWeight: '800', marginTop: 2 },
   unit: { fontSize: 14, fontWeight: '600', color: '#666' },
+  buttons: { flexDirection: 'row', gap: 8 },
   logBtn: {
     backgroundColor: '#3b82f6',
     borderRadius: 10,
@@ -174,6 +277,13 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
   },
   logText: { color: '#fff', fontWeight: '700' },
+  editBtn: {
+    backgroundColor: '#fff',
+    borderRadius: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+  },
+  editText: { color: '#3b82f6', fontWeight: '700' },
   hint: { color: '#999', marginTop: 12 },
   dates: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 4 },
   date: { color: '#777', fontSize: 12 },
@@ -186,6 +296,18 @@ const styles = StyleSheet.create({
   },
   modal: { backgroundColor: '#fff', borderRadius: 16, padding: 20, gap: 12 },
   modalTitle: { fontSize: 20, fontWeight: '700' },
+  fieldLabel: { fontSize: 14, fontWeight: '700', color: '#444' },
+  day: {
+    width: 56,
+    paddingVertical: 8,
+    borderRadius: 14,
+    backgroundColor: '#f6f7f9',
+    alignItems: 'center',
+  },
+  dayActive: { backgroundColor: '#3b82f6' },
+  weekday: { fontSize: 11, color: '#777' },
+  dayNumber: { fontSize: 18, fontWeight: '700', marginVertical: 1 },
+  textActive: { color: '#fff' },
   input: {
     backgroundColor: '#f6f7f9',
     borderRadius: 10,
@@ -203,4 +325,15 @@ const styles = StyleSheet.create({
     backgroundColor: '#3b82f6', alignItems: 'center',
   },
   saveText: { color: '#fff', fontWeight: '700' },
+
+  item: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f0f0f4',
+  },
+  itemDate: { flex: 1, fontWeight: '600' },
+  itemWeight: { color: '#666', marginRight: 12 },
+  remove: { color: '#e5484d', fontSize: 16 },
 });
