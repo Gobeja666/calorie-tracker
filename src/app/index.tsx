@@ -1,13 +1,13 @@
-import { Ionicons } from '@expo/vector-icons';
-import { Stack, useRouter } from 'expo-router';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { View, Text, Pressable, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Stack, useRouter } from 'expo-router';
 import Svg, { Circle } from 'react-native-svg';
+import { Ionicons } from '@expo/vector-icons';
 import { useFood } from '../FoodContext';
 import { useProfile } from '../ProfileContext';
 import { t } from '../strings';
 import WeightCard from '../WeightCard';
-
+import DayPicker from '../DayPicker';
 
 const EXERCISE = 0;
 
@@ -46,14 +46,17 @@ export default function TodayScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <Stack.Screen
-  options={{
-    headerRight: () => (
-      <Pressable onPress={() => router.push('/profile')}>
-        <Ionicons name="person-circle-outline" size={30} color="#3b82f6" />
-      </Pressable>
-    ),
-  }}
-/>
+        options={{
+          headerRight: () => (
+            <Pressable onPress={() => router.push('/profile')}>
+              <Ionicons name="person-circle-outline" size={30} color="#3b82f6" />
+            </Pressable>
+          ),
+        }}
+      />
+
+      <DayPicker />
+
       <Pressable style={styles.card} onPress={() => router.push('/meals')}>
         <Text style={styles.title}>{t.today.calories}</Text>
         <Text style={styles.formula}>{t.today.formula}</Text>
@@ -94,6 +97,7 @@ export default function TodayScreen() {
           </View>
         </View>
       </Pressable>
+
       <WeightCard />
     </SafeAreaView>
   );

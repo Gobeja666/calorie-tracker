@@ -1,15 +1,12 @@
-import { Ionicons } from '@expo/vector-icons';
 import { useState } from 'react';
 import {
-  Modal,
-  Pressable, ScrollView,
-  StyleSheet,
-  Text, TextInput,
-  View,
+  View, Text, TextInput, Pressable, ScrollView, Modal, StyleSheet,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
 import { useFood } from '../FoodContext';
 import { t } from '../strings';
+import DayPicker from '../DayPicker';
 
 type IconName = React.ComponentProps<typeof Ionicons>['name'];
 
@@ -72,6 +69,8 @@ export default function MealsScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
+      <DayPicker />
+
       <ScrollView contentContainerStyle={{ gap: 12, paddingBottom: 100 }}>
         {MEALS.map((meal) => (
           <MealSection key={meal.name} meal={meal} />
