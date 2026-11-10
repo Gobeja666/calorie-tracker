@@ -1,98 +1,117 @@
-import * as Device from 'expo-device';
-import { Platform, StyleSheet } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import { Stack, useRouter } from 'expo-router';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import Svg, { Circle } from 'react-native-svg';
+import { useFood } from '../FoodContext';
+import { useProfile } from '../ProfileContext';
+import { t } from '../strings';
+import WeightCard from '../WeightCard';
 
-import { AnimatedIcon } from '@/components/animated-icon';
-import { HintRow } from '@/components/hint-row';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { WebBadge } from '@/components/web-badge';
-import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
 
-function getDevMenuHint() {
-  if (Platform.OS === 'web') {
-    return <ThemedText type="small">use browser devtools</ThemedText>;
-  }
-  if (Device.isDevice) {
-    return (
-      <ThemedText type="small">
-        shake device or press <ThemedText type="code">m</ThemedText> in terminal
-      </ThemedText>
-    );
-  }
-  const shortcut = Platform.OS === 'android' ? 'cmd+m (or ctrl+m)' : 'cmd+d';
+const EXERCISE = 0;
+
+const SIZE = 130;
+const STROKE = 12;
+const RADIUS = (SIZE - STROKE) / 2;
+const CIRCUMFERENCE = 2 * Math.PI * RADIUS;
+
+function Stat({
+  icon, color, label, value,
+}: {
+  icon: React.ComponentProps<typeof Ionicons>['name'];
+  color: string;
+  label: string;
+  value: number;
+}) {
   return (
-    <ThemedText type="small">
-      press <ThemedText type="code">{shortcut}</ThemedText>
-    </ThemedText>
+    <View style={styles.stat}>
+      <Ionicons name={icon} size={22} color={color} style={styles.statIcon} />
+      <View>
+        <Text style={styles.statLabel}>{label}</Text>
+        <Text style={styles.statValue}>{value}</Text>
+      </View>
+    </View>
   );
 }
 
-export default function HomeScreen() {
+export default function TodayScreen() {
+  const { total: FOOD } = useFood();
+  const router = useRouter();
+  const { goal: GOAL } = useProfile();
+
+  const remaining = GOAL - FOOD + EXERCISE;
+  const progress = Math.min(Math.max((FOOD - EXERCISE) / GOAL, 0), 1);
+
   return (
-    <ThemedView style={styles.container}>
-      <SafeAreaView style={styles.safeArea}>
-        <ThemedView style={styles.heroSection}>
-          <AnimatedIcon />
-          <ThemedText type="title" style={styles.title}>
-            Welcome to&nbsp;Expo
-          </ThemedText>
-        </ThemedView>
+    <SafeAreaView style={styles.container}>
+      <Stack.Screen
+  options={{
+    headerRight: () => (
+      <Pressable onPress={() => router.push('/profile')}>
+        <Ionicons name="person-circle-outline" size={30} color="#3b82f6" />
+      </Pressable>
+    ),
+  }}
+/>
+      <Pressable style={styles.card} onPress={() => router.push('/meals')}>
+        <Text style={styles.title}>{t.today.calories}</Text>
+        <Text style={styles.formula}>{t.today.formula}</Text>
 
-        <ThemedText type="code" style={styles.code}>
-          get started
-        </ThemedText>
+        <View style={styles.row}>
+          <View style={styles.ringWrap}>
+            <Svg width={SIZE} height={SIZE} style={{ transform: [{ rotate: '-90deg' }] }}>
+              <Circle
+                cx={SIZE / 2}
+                cy={SIZE / 2}
+                r={RADIUS}
+                stroke="#d6e4fb"
+                strokeWidth={STROKE}
+                fill="none"
+              />
+              <Circle
+                cx={SIZE / 2}
+                cy={SIZE / 2}
+                r={RADIUS}
+                stroke="#3b82f6"
+                strokeWidth={STROKE}
+                fill="none"
+                strokeLinecap="round"
+                strokeDasharray={CIRCUMFERENCE}
+                strokeDashoffset={CIRCUMFERENCE * (1 - progress)}
+              />
+            </Svg>
+            <View style={styles.ringCenter}>
+              <Text style={styles.big}>{remaining}</Text>
+              <Text style={styles.small}>{t.today.remaining}</Text>
+            </View>
+          </View>
 
-        <ThemedView type="backgroundElement" style={styles.stepContainer}>
-          <HintRow
-            title="Try editing"
-            hint={<ThemedText type="code">src/app/index.tsx</ThemedText>}
-          />
-          <HintRow title="Dev tools" hint={getDevMenuHint()} />
-          <HintRow
-            title="Fresh start"
-            hint={<ThemedText type="code">npm run reset-project</ThemedText>}
-          />
-        </ThemedView>
-
-        {Platform.OS === 'web' && <WebBadge />}
-      </SafeAreaView>
-    </ThemedView>
+          <View style={styles.stats}>
+            <Stat icon="flag" color="#555" label={t.today.baseGoal} value={GOAL} />
+            <Stat icon="restaurant" color="#3b82f6" label={t.today.food} value={FOOD} />
+            <Stat icon="flame" color="#f59e0b" label={t.today.exercise} value={EXERCISE} />
+          </View>
+        </View>
+      </Pressable>
+      <WeightCard />
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: 'center',
-    flexDirection: 'row',
-  },
-  safeArea: {
-    flex: 1,
-    paddingHorizontal: Spacing.four,
-    alignItems: 'center',
-    gap: Spacing.three,
-    paddingBottom: BottomTabInset + Spacing.three,
-    maxWidth: MaxContentWidth,
-  },
-  heroSection: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    flex: 1,
-    paddingHorizontal: Spacing.four,
-    gap: Spacing.four,
-  },
-  title: {
-    textAlign: 'center',
-  },
-  code: {
-    textTransform: 'uppercase',
-  },
-  stepContainer: {
-    gap: Spacing.three,
-    alignSelf: 'stretch',
-    paddingHorizontal: Spacing.three,
-    paddingVertical: Spacing.four,
-    borderRadius: Spacing.four,
-  },
+  container: { flex: 1, backgroundColor: '#f6f7f9', padding: 16 },
+  card: { backgroundColor: '#eef4ff', borderRadius: 16, padding: 18 },
+  title: { fontSize: 20, fontWeight: '700' },
+  formula: { color: '#777', fontSize: 12, marginTop: 4, marginBottom: 16 },
+  row: { flexDirection: 'row', alignItems: 'center' },
+  ringWrap: { width: SIZE, height: SIZE, justifyContent: 'center', alignItems: 'center' },
+  ringCenter: { position: 'absolute', alignItems: 'center' },
+  big: { fontSize: 28, fontWeight: '800' },
+  small: { fontSize: 12, color: '#666' },
+  stats: { flex: 1, marginLeft: 24, gap: 14 },
+  stat: { flexDirection: 'row', alignItems: 'center' },
+  statIcon: { width: 32 },
+  statLabel: { fontSize: 12, color: '#666' },
+  statValue: { fontSize: 16, fontWeight: '700' },
 });
