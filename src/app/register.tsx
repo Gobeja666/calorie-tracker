@@ -77,7 +77,7 @@ export default function RegisterScreen() {
     }
 
     // Also fill the local profile so the daily goal works immediately
-    saveProfile({ age: a, height: h, weight: w, goalType });
+    saveProfile({ age: a, dateOfBirth: dobString, height: h, weight: w, goalType });
 
     if (data.session) {
       router.replace('/');

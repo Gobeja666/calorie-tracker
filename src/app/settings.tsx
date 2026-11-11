@@ -2,7 +2,7 @@ import { View, Text, Pressable, ScrollView, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { useAuth } from '../AuthContext';
-import { useProfile } from '../ProfileContext';
+import { useProfile, getAge } from '../ProfileContext';
 import { t } from '../strings';
 
 function Row({ label, value }: { label: string; value: string }) {
@@ -31,7 +31,7 @@ export default function SettingsScreen() {
           <Text style={styles.cardTitle}>{t.settings.yourProfile}</Text>
           <Row
             label={t.profile.age}
-            value={profile ? String(profile.age) : t.settings.notSet}
+            value={profile ? String(getAge(profile)) : t.settings.notSet}
           />
           <Row
             label={t.profile.height}

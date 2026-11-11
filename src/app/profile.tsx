@@ -2,7 +2,9 @@ import { useState } from 'react';
 import { View, Text, TextInput, Pressable, ScrollView, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
-import { useProfile, calculateGoal, GoalType } from '../ProfileContext';
+import {
+  useProfile, calculateGoal, parseDob, ageFromDob, GoalType,
+} from '../ProfileContext';
 import { t } from '../strings';
 
 const GOAL_TYPES: GoalType[] = ['lose', 'maintain', 'gain'];
@@ -11,38 +13,79 @@ export default function ProfileScreen() {
   const router = useRouter();
   const { profile, saveProfile } = useProfile();
 
-  const [age, setAge] = useState(profile ? String(profile.age) : '');
+  const dobParts = profile?.dateOfBirth?.split('-') ?? [];
+  const [day, setDay] = useState(dobParts[2] ? String(parseInt(dobParts[2], 10)) : '');
+  const [month, setMonth] = useState(dobParts[1] ? String(parseInt(dobParts[1], 10)) : '');
+  const [year, setYear] = useState(dobParts[0] ?? '');
   const [height, setHeight] = useState(profile ? String(profile.height) : '');
   const [weight, setWeight] = useState(profile ? String(profile.weight) : '');
   const [goalType, setGoalType] = useState<GoalType>(profile?.goalType ?? 'maintain');
+  const [error, setError] = useState('');
 
-  const a = parseFloat(age);
-  const h = parseFloat(height);
-  const w = parseFloat(weight);
-  const valid = a > 0 && h > 0 && w > 0;
+  const dob = parseDob(day, month, year);
+  const h = parseFloat(height.replace(',', '.'));
+  const w = parseFloat(weight.replace(',', '.'));
+  const valid = dob !== null && h > 0 && w > 0;
 
-  const preview = valid
-    ? calculateGoal({ age: a, height: h, weight: w, goalType })
-    : null;
+  const preview =
+    valid && dob
+      ? calculateGoal({
+          age: ageFromDob(dob),
+          dateOfBirth: dob,
+          height: h,
+          weight: w,
+          goalType,
+        })
+      : null;
 
   function handleSave() {
-    if (!valid) return;
-    saveProfile({ age: a, height: h, weight: w, goalType });
+    if (!dob) {
+      setError(t.register.invalidDate);
+      return;
+    }
+    if (!(h > 0 && w > 0)) return;
+    setError('');
+    saveProfile({
+      age: ageFromDob(dob),
+      dateOfBirth: dob,
+      height: h,
+      weight: w,
+      goalType,
+    });
     router.replace('/settings');
   }
 
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView contentContainerStyle={{ gap: 12 }}>
+      <ScrollView contentContainerStyle={{ gap: 12, padding: 16 }}>
         <View style={styles.card}>
-          <Text style={styles.label}>{t.profile.age}</Text>
-          <TextInput
-            style={styles.input}
-            placeholder={t.profile.agePlaceholder}
-            keyboardType="numeric"
-            value={age}
-            onChangeText={setAge}
-          />
+          <Text style={styles.label}>{t.register.dateOfBirth}</Text>
+          <View style={{ flexDirection: 'row', gap: 8 }}>
+            <TextInput
+              style={[styles.input, { flex: 1, minWidth: 0 }]}
+              placeholder={t.register.day}
+              keyboardType="numeric"
+              maxLength={2}
+              value={day}
+              onChangeText={setDay}
+            />
+            <TextInput
+              style={[styles.input, { flex: 1, minWidth: 0 }]}
+              placeholder={t.register.month}
+              keyboardType="numeric"
+              maxLength={2}
+              value={month}
+              onChangeText={setMonth}
+            />
+            <TextInput
+              style={[styles.input, { flex: 2, minWidth: 0 }]}
+              placeholder={t.register.year}
+              keyboardType="numeric"
+              maxLength={4}
+              value={year}
+              onChangeText={setYear}
+            />
+          </View>
 
           <Text style={styles.label}>{t.profile.height}</Text>
           <TextInput
@@ -94,6 +137,8 @@ export default function ProfileScreen() {
           )}
         </View>
 
+        {error !== '' && <Text style={styles.error}>{error}</Text>}
+
         <Pressable
           style={[styles.saveBtn, !valid && { opacity: 0.4 }]}
           onPress={handleSave}
@@ -106,7 +151,7 @@ export default function ProfileScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f6f7f9', padding: 16 },
+  container: { flex: 1, backgroundColor: '#f6f7f9' },
   card: { backgroundColor: '#fff', borderRadius: 16, padding: 18, gap: 8 },
   label: { fontSize: 14, fontWeight: '700', color: '#444' },
   input: {
@@ -135,6 +180,7 @@ const styles = StyleSheet.create({
   resultLabel: { color: '#666', fontSize: 13 },
   resultValue: { fontSize: 32, fontWeight: '800', marginTop: 4 },
   hint: { color: '#999', marginTop: 4, textAlign: 'center' },
+  error: { color: '#e5484d', textAlign: 'center' },
   saveBtn: {
     backgroundColor: '#3b82f6',
     borderRadius: 12,
