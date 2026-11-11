@@ -1,30 +1,51 @@
+import { useEffect } from 'react';
 import { View } from 'react-native';
-import { Stack } from 'expo-router';
+import { Stack, useRouter, useSegments } from 'expo-router';
+import { AuthProvider, useAuth } from '../AuthContext';
 import { FoodProvider } from '../FoodContext';
 import { ProfileProvider } from '../ProfileContext';
 import { WeightProvider } from '../WeightContext';
 import NavBar from '../NavBar';
 import { t } from '../strings';
 
+// Sends logged-out users to Login, and logged-in users away from Login/Register
+function AuthGate() {
+  const { session, loading } = useAuth();
+  const segments = useSegments();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (loading) return;
+    const onAuthPage = segments[0] === 'login' || segments[0] === 'register';
+    if (!session && !onAuthPage) router.replace('/login');
+    else if (session && onAuthPage) router.replace('/');
+  }, [session, loading, segments]);
+
+  return null;
+}
+
 export default function RootLayout() {
   return (
-    <ProfileProvider>
-      <FoodProvider>
-        <WeightProvider>
-          <View style={{ flex: 1 }}>
+    <AuthProvider>
+      <ProfileProvider>
+        <FoodProvider>
+          <WeightProvider>
+            <AuthGate />
             <View style={{ flex: 1 }}>
-              <Stack
-                screenOptions={{
-                  headerBackVisible: false,
-                  headerTitle: t.appName,
-                  headerTitleAlign: 'center',
-                }}
-              />
+              <View style={{ flex: 1 }}>
+                <Stack
+                  screenOptions={{
+                    headerBackVisible: false,
+                    headerTitle: t.appName,
+                    headerTitleAlign: 'center',
+                  }}
+                />
+              </View>
+              <NavBar />
             </View>
-            <NavBar />
-          </View>
-        </WeightProvider>
-      </FoodProvider>
-    </ProfileProvider>
+          </WeightProvider>
+        </FoodProvider>
+      </ProfileProvider>
+    </AuthProvider>
   );
 }

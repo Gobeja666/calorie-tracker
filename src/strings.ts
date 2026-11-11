@@ -106,4 +106,27 @@ export const t = {
     meals: 'Meals',
     settings: 'Settings',
   },
+
+    // Register page
+  register: {
+    title: 'Create account',
+    subtitle: 'Tell us about you so we can build your plan',
+    email: 'Email',
+    password: 'Password',
+    passwordHint: 'At least 6 characters',
+    createAccount: 'Create account',
+    invalidInput: 'Check your email, password (6+ characters), age, height and weight',
+    error: 'Could not create the account',
+    checkEmail: 'Account created. Check your email to confirm it, then log in.',
+  },
+
+    // Login page
+  login: {
+    title: 'Log in',
+    subtitle: 'Welcome back',
+    logIn: 'Log in',
+    error: 'Could not log in',
+    noAccount: "Don't have an account? Register",
+    haveAccount: 'Already have an account? Log in',
+  },
 };

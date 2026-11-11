@@ -31,6 +31,8 @@ export default function NavBar() {
   const pathname = usePathname();
   const insets = useSafeAreaInsets();
   const [addOpen, setAddOpen] = useState(false);
+  
+  if (pathname === '/register' || pathname === '/login') return null;
 
   return (
     <View style={[styles.bar, { paddingBottom: Math.max(insets.bottom, 8) }]}>
