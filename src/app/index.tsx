@@ -1,13 +1,15 @@
-import { View, Text, Pressable, StyleSheet } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { Stack, useRouter } from 'expo-router';
-import Svg, { Circle } from 'react-native-svg';
 import { Ionicons } from '@expo/vector-icons';
+import { Stack, useRouter } from 'expo-router';
+import { ComponentRef, useRef, useState } from 'react';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import Svg, { Circle } from 'react-native-svg';
+import DayPicker from '../DayPicker';
 import { useFood } from '../FoodContext';
+import MacrosCard from '../MacrosCard';
 import { useProfile } from '../ProfileContext';
 import { t } from '../strings';
 import WeightCard from '../WeightCard';
-import DayPicker from '../DayPicker';
 
 const EXERCISE = 0;
 
@@ -40,8 +42,17 @@ export default function TodayScreen() {
   const router = useRouter();
   const { goal: GOAL } = useProfile();
 
+  const scrollRef = useRef<ComponentRef<typeof ScrollView>>(null);
+  const [pageW, setPageW] = useState(0);
+  const [page, setPage] = useState(0);
+
   const remaining = GOAL - FOOD + EXERCISE;
   const progress = Math.min(Math.max((FOOD - EXERCISE) / GOAL, 0), 1);
+
+  function goToPage(i: number) {
+    setPage(i);
+    scrollRef.current?.scrollTo({ x: i * pageW, animated: true });
+  }
 
   return (
     <SafeAreaView style={styles.container}>
@@ -57,46 +68,81 @@ export default function TodayScreen() {
 
       <DayPicker />
 
-      <Pressable style={styles.card} onPress={() => router.push('/meals')}>
-        <Text style={styles.title}>{t.today.calories}</Text>
-        <Text style={styles.formula}>{t.today.formula}</Text>
+      <View onLayout={(e) => setPageW(e.nativeEvent.layout.width)}>
+        {pageW > 0 && (
+          <ScrollView
+            ref={scrollRef}
+            horizontal
+            pagingEnabled
+            showsHorizontalScrollIndicator={false}
+            scrollEventThrottle={16}
+            onScroll={(e) =>
+              setPage(Math.round(e.nativeEvent.contentOffset.x / pageW))
+            }
+          >
+            {/* Page 1: Calories */}
+            <View style={{ width: pageW }}>
+              <Pressable style={styles.card} onPress={() => router.push('/meals')}>
+                <Text style={styles.title}>{t.today.calories}</Text>
+                <Text style={styles.formula}>{t.today.formula}</Text>
 
-        <View style={styles.row}>
-          <View style={styles.ringWrap}>
-            <Svg width={SIZE} height={SIZE} style={{ transform: [{ rotate: '-90deg' }] }}>
-              <Circle
-                cx={SIZE / 2}
-                cy={SIZE / 2}
-                r={RADIUS}
-                stroke="#d6e4fb"
-                strokeWidth={STROKE}
-                fill="none"
-              />
-              <Circle
-                cx={SIZE / 2}
-                cy={SIZE / 2}
-                r={RADIUS}
-                stroke="#3b82f6"
-                strokeWidth={STROKE}
-                fill="none"
-                strokeLinecap="round"
-                strokeDasharray={CIRCUMFERENCE}
-                strokeDashoffset={CIRCUMFERENCE * (1 - progress)}
-              />
-            </Svg>
-            <View style={styles.ringCenter}>
-              <Text style={styles.big}>{remaining}</Text>
-              <Text style={styles.small}>{t.today.remaining}</Text>
+                <View style={styles.row}>
+                  <View style={styles.ringWrap}>
+                    <Svg
+                      width={SIZE}
+                      height={SIZE}
+                      style={{ transform: [{ rotate: '-90deg' }] }}
+                    >
+                      <Circle
+                        cx={SIZE / 2}
+                        cy={SIZE / 2}
+                        r={RADIUS}
+                        stroke="#d6e4fb"
+                        strokeWidth={STROKE}
+                        fill="none"
+                      />
+                      <Circle
+                        cx={SIZE / 2}
+                        cy={SIZE / 2}
+                        r={RADIUS}
+                        stroke="#3b82f6"
+                        strokeWidth={STROKE}
+                        fill="none"
+                        strokeLinecap="round"
+                        strokeDasharray={CIRCUMFERENCE}
+                        strokeDashoffset={CIRCUMFERENCE * (1 - progress)}
+                      />
+                    </Svg>
+                    <View style={styles.ringCenter}>
+                      <Text style={styles.big}>{remaining}</Text>
+                      <Text style={styles.small}>{t.today.remaining}</Text>
+                    </View>
+                  </View>
+
+                  <View style={styles.stats}>
+                    <Stat icon="flag" color="#555" label={t.today.baseGoal} value={GOAL} />
+                    <Stat icon="restaurant" color="#3b82f6" label={t.today.food} value={FOOD} />
+                    <Stat icon="flame" color="#f59e0b" label={t.today.exercise} value={EXERCISE} />
+                  </View>
+                </View>
+              </Pressable>
             </View>
-          </View>
 
-          <View style={styles.stats}>
-            <Stat icon="flag" color="#555" label={t.today.baseGoal} value={GOAL} />
-            <Stat icon="restaurant" color="#3b82f6" label={t.today.food} value={FOOD} />
-            <Stat icon="flame" color="#f59e0b" label={t.today.exercise} value={EXERCISE} />
-          </View>
+            {/* Page 2: Macros */}
+            <View style={{ width: pageW }}>
+              <MacrosCard />
+            </View>
+          </ScrollView>
+        )}
+
+        <View style={styles.dots}>
+          {[0, 1].map((i) => (
+            <Pressable key={i} onPress={() => goToPage(i)} hitSlop={8}>
+              <View style={[styles.dot, page === i && styles.dotActive]} />
+            </Pressable>
+          ))}
         </View>
-      </Pressable>
+      </View>
 
       <WeightCard />
     </SafeAreaView>
@@ -118,4 +164,7 @@ const styles = StyleSheet.create({
   statIcon: { width: 32 },
   statLabel: { fontSize: 12, color: '#666' },
   statValue: { fontSize: 16, fontWeight: '700' },
+  dots: { flexDirection: 'row', justifyContent: 'center', gap: 8, marginTop: 10 },
+  dot: { width: 8, height: 8, borderRadius: 4, backgroundColor: '#d0d5dd' },
+  dotActive: { backgroundColor: '#3b82f6' },
 });

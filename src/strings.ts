@@ -16,6 +16,20 @@ export const t = {
     exercise: 'Exercise',
   },
 
+  // Macros card (Today page)
+  macros: {
+    title: 'Macros',
+    formula: 'Share of calories from each macro',
+    protein: 'Protein',
+    carbs: 'Carbs',
+    fat: 'Fat',
+    shortProtein: 'P',
+    shortCarbs: 'C',
+    shortFat: 'F',
+    g: 'g',
+    total: 'Total',
+  },
+
   // Meal names (only change the text on the right side)
   mealNames: {
     Breakfast: 'Breakfast',
@@ -30,6 +44,9 @@ export const t = {
     addFood: 'Add food',
     foodName: 'Food name',
     caloriesPlaceholder: 'Calories (kcal)',
+    proteinPlaceholder: 'Protein (g)',
+    carbsPlaceholder: 'Carbs (g)',
+    fatPlaceholder: 'Fat (g)',
     kcal: 'kcal',
     cancel: 'Cancel',
     add: 'Add',
@@ -53,7 +70,8 @@ export const t = {
     fillAllFields: 'Fill in age, height and weight to see your goal',
     save: 'Save',
   },
-    // Weight tracking (Today page)
+
+  // Weight tracking (Today page)
   weight: {
     currentWeight: 'Current weight',
     noWeight: '—',
@@ -69,7 +87,8 @@ export const t = {
     close: 'Close',
     noEntries: 'No weights logged yet',
   },
-    // Day picker
+
+  // Day picker
   days: {
     today: 'Today',
     weekdays: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'],

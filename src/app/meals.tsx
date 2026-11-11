@@ -1,12 +1,16 @@
+import { Ionicons } from '@expo/vector-icons';
 import { useState } from 'react';
 import {
-  View, Text, TextInput, Pressable, ScrollView, Modal, StyleSheet,
+  Modal,
+  Pressable, ScrollView,
+  StyleSheet,
+  Text, TextInput,
+  View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Ionicons } from '@expo/vector-icons';
+import DayPicker from '../DayPicker';
 import { useFood } from '../FoodContext';
 import { t } from '../strings';
-import DayPicker from '../DayPicker';
 
 type IconName = React.ComponentProps<typeof Ionicons>['name'];
 
@@ -33,15 +37,27 @@ function MealSection({ meal }: { meal: (typeof MEALS)[number] }) {
       {foods.length === 0 ? (
         <Text style={styles.empty}>{t.meals.nothingLogged}</Text>
       ) : (
-        foods.map((f) => (
-          <View key={f.id} style={styles.item}>
-            <Text style={styles.itemName}>{f.name}</Text>
-            <Text style={styles.itemCal}>{f.calories} {t.meals.kcal}</Text>
-            <Pressable onPress={() => removeFood(meal.name, f.id)}>
-              <Text style={styles.remove}>✕</Text>
-            </Pressable>
-          </View>
-        ))
+        foods.map((f) => {
+          const hasMacros = (f.protein ?? 0) + (f.carbs ?? 0) + (f.fat ?? 0) > 0;
+          return (
+            <View key={f.id} style={styles.item}>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.itemName}>{f.name}</Text>
+                {hasMacros && (
+                  <Text style={styles.itemMacros}>
+                    {t.macros.shortProtein} {f.protein ?? 0}{t.macros.g} ·{' '}
+                    {t.macros.shortCarbs} {f.carbs ?? 0}{t.macros.g} ·{' '}
+                    {t.macros.shortFat} {f.fat ?? 0}{t.macros.g}
+                  </Text>
+                )}
+              </View>
+              <Text style={styles.itemCal}>{f.calories} {t.meals.kcal}</Text>
+              <Pressable onPress={() => removeFood(meal.name, f.id)}>
+                <Text style={styles.remove}>✕</Text>
+              </Pressable>
+            </View>
+          );
+        })
       )}
     </View>
   );
@@ -53,17 +69,32 @@ export default function MealsScreen() {
   const [selected, setSelected] = useState('Breakfast');
   const [name, setName] = useState('');
   const [calories, setCalories] = useState('');
+  const [protein, setProtein] = useState('');
+  const [carbs, setCarbs] = useState('');
+  const [fat, setFat] = useState('');
 
   function close() {
     setOpen(false);
     setName('');
     setCalories('');
+    setProtein('');
+    setCarbs('');
+    setFat('');
+  }
+
+  function toGrams(v: string) {
+    const n = parseFloat(v.replace(',', '.'));
+    return isNaN(n) || n < 0 ? 0 : n;
   }
 
   function handleAdd() {
-    const cal = parseFloat(calories);
+    const cal = parseFloat(calories.replace(',', '.'));
     if (!name.trim() || isNaN(cal) || cal <= 0) return;
-    addFood(selected, name.trim(), cal);
+    addFood(selected, name.trim(), cal, {
+      protein: toGrams(protein),
+      carbs: toGrams(carbs),
+      fat: toGrams(fat),
+    });
     close();
   }
 
@@ -123,8 +154,32 @@ export default function MealsScreen() {
               keyboardType="numeric"
               value={calories}
               onChangeText={setCalories}
-              onSubmitEditing={handleAdd}
             />
+
+            <View style={styles.macroRow}>
+              <TextInput
+                style={[styles.input, { flex: 1 }]}
+                placeholder={t.meals.proteinPlaceholder}
+                keyboardType="numeric"
+                value={protein}
+                onChangeText={setProtein}
+              />
+              <TextInput
+                style={[styles.input, { flex: 1 }]}
+                placeholder={t.meals.carbsPlaceholder}
+                keyboardType="numeric"
+                value={carbs}
+                onChangeText={setCarbs}
+              />
+              <TextInput
+                style={[styles.input, { flex: 1 }]}
+                placeholder={t.meals.fatPlaceholder}
+                keyboardType="numeric"
+                value={fat}
+                onChangeText={setFat}
+                onSubmitEditing={handleAdd}
+              />
+            </View>
 
             <View style={styles.modalButtons}>
               <Pressable style={styles.cancelBtn} onPress={close}>
@@ -158,7 +213,8 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: '#f0f0f4',
   },
-  itemName: { flex: 1, fontWeight: '600' },
+  itemName: { fontWeight: '600' },
+  itemMacros: { color: '#888', fontSize: 12, marginTop: 2 },
   itemCal: { color: '#666', marginRight: 12 },
   remove: { color: '#e5484d', fontSize: 16 },
 
@@ -205,6 +261,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 12,
   },
+  macroRow: { flexDirection: 'row', gap: 8 },
   modalButtons: { flexDirection: 'row', gap: 8, marginTop: 4 },
   cancelBtn: {
     flex: 1, paddingVertical: 12, borderRadius: 10,
