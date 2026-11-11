@@ -5,6 +5,7 @@ import { useAuth } from '../AuthContext';
 import { useProfile, getAge } from '../ProfileContext';
 import { t } from '../strings';
 import NotificationsCard from '../NotificationsCard';
+import UserCard from '../UserCard';
 
 function Row({ label, value }: { label: string; value: string }) {
   return (
@@ -23,10 +24,10 @@ export default function SettingsScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={{ gap: 12, padding: 16 }}>
-        <View style={styles.card}>
-          <Text style={styles.cardTitle}>{t.settings.account}</Text>
-          <Row label={t.settings.email} value={session?.user.email ?? '—'} />
-        </View>
+
+        <ScrollView contentContainerStyle={{ gap: 12, padding: 16 }}>
+         <UserCard />
+        </ScrollView>
 
         <View style={styles.card}>
           <Text style={styles.cardTitle}>{t.settings.yourProfile}</Text>

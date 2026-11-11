@@ -193,4 +193,23 @@ export const t = {
     weightTitle: 'Weigh-in time',
     weightBody: 'Log your weight to track your progress.',
   },
+
+    // User card (Settings)
+  userCard: {
+    noName: 'Add your name',
+    namePlaceholder: 'Your name',
+    edit: 'Edit',
+    save: 'Save',
+    changePhoto: 'Change photo',
+    memberFor: 'Account age',
+    day: 'day',
+    days: 'days',
+    month: 'month',
+    months: 'months',
+    year: 'year',
+    years: 'years',
+    today: 'Joined today',
+    uploadError: 'Could not upload the photo',
+    saveError: 'Could not save',
+  },
 };
