@@ -1,4 +1,4 @@
-import { createContext, ReactNode, useContext, useState } from 'react';
+import { createContext, useContext, useState, ReactNode } from 'react';
 import { usePersistentState } from './usePersistentState';
 
 export type Food = {
@@ -35,6 +35,13 @@ type FoodContextType = {
   selectedDate: string;
   setSelectedDate: (key: string) => void;
   addFood: (meal: string, name: string, calories: number, macros: Macros) => void;
+  updateFood: (
+    meal: string,
+    id: number,
+    name: string,
+    calories: number,
+    macros: Macros
+  ) => void;
   removeFood: (meal: string, id: number) => void;
 };
 
@@ -70,6 +77,29 @@ export function FoodProvider({ children }: { children: ReactNode }) {
     });
   }
 
+  function updateFood(
+    meal: string,
+    id: number,
+    name: string,
+    calories: number,
+    m: Macros
+  ) {
+    setDays((prev) => {
+      const day = prev[selectedDate] ?? emptyMeals();
+      return {
+        ...prev,
+        [selectedDate]: {
+          ...day,
+          [meal]: day[meal].map((f) =>
+            f.id === id
+              ? { ...f, name, calories, protein: m.protein, carbs: m.carbs, fat: m.fat }
+              : f
+          ),
+        },
+      };
+    });
+  }
+
   function removeFood(meal: string, id: number) {
     setDays((prev) => {
       const day = prev[selectedDate] ?? emptyMeals();
@@ -85,7 +115,17 @@ export function FoodProvider({ children }: { children: ReactNode }) {
 
   return (
     <FoodContext.Provider
-      value={{ meals, total, macros, days, selectedDate, setSelectedDate, addFood, removeFood }}
+      value={{
+        meals,
+        total,
+        macros,
+        days,
+        selectedDate,
+        setSelectedDate,
+        addFood,
+        updateFood,
+        removeFood,
+      }}
     >
       {children}
     </FoodContext.Provider>

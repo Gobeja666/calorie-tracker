@@ -1,12 +1,20 @@
-import { Ionicons } from '@expo/vector-icons';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useState } from 'react';
+import { View, Text, Pressable, ScrollView, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import DayPicker from '../DayPicker';
-import { useFood } from '../FoodContext';
+import { Ionicons } from '@expo/vector-icons';
+import { useFood, Food } from '../FoodContext';
 import { MEALS } from '../mealTypes';
 import { t } from '../strings';
+import DayPicker from '../DayPicker';
+import EditFoodModal from '../EditFoodModal';
 
-function MealSection({ meal }: { meal: (typeof MEALS)[number] }) {
+function MealSection({
+  meal,
+  onEdit,
+}: {
+  meal: (typeof MEALS)[number];
+  onEdit: (meal: string, food: Food) => void;
+}) {
   const { meals, removeFood } = useFood();
   const foods = meals[meal.name];
 
@@ -26,18 +34,20 @@ function MealSection({ meal }: { meal: (typeof MEALS)[number] }) {
           const hasMacros = (f.protein ?? 0) + (f.carbs ?? 0) + (f.fat ?? 0) > 0;
           return (
             <View key={f.id} style={styles.item}>
-              <View style={{ flex: 1 }}>
-                <Text style={styles.itemName}>{f.name}</Text>
-                {hasMacros && (
-                  <Text style={styles.itemMacros}>
-                    {t.macros.shortProtein} {f.protein ?? 0}{t.macros.g} ·{' '}
-                    {t.macros.shortCarbs} {f.carbs ?? 0}{t.macros.g} ·{' '}
-                    {t.macros.shortFat} {f.fat ?? 0}{t.macros.g}
-                  </Text>
-                )}
-              </View>
-              <Text style={styles.itemCal}>{f.calories} {t.meals.kcal}</Text>
-              <Pressable onPress={() => removeFood(meal.name, f.id)}>
+              <Pressable style={styles.itemTap} onPress={() => onEdit(meal.name, f)}>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.itemName}>{f.name}</Text>
+                  {hasMacros && (
+                    <Text style={styles.itemMacros}>
+                      {t.macros.shortProtein} {f.protein ?? 0}{t.macros.g} ·{' '}
+                      {t.macros.shortCarbs} {f.carbs ?? 0}{t.macros.g} ·{' '}
+                      {t.macros.shortFat} {f.fat ?? 0}{t.macros.g}
+                    </Text>
+                  )}
+                </View>
+                <Text style={styles.itemCal}>{f.calories} {t.meals.kcal}</Text>
+              </Pressable>
+              <Pressable onPress={() => removeFood(meal.name, f.id)} hitSlop={8}>
                 <Text style={styles.remove}>✕</Text>
               </Pressable>
             </View>
@@ -49,15 +59,27 @@ function MealSection({ meal }: { meal: (typeof MEALS)[number] }) {
 }
 
 export default function MealsScreen() {
+  const [editing, setEditing] = useState<{ meal: string; food: Food } | null>(null);
+
   return (
     <SafeAreaView style={styles.container}>
       <DayPicker />
 
       <ScrollView contentContainerStyle={{ gap: 12, paddingBottom: 24 }}>
         {MEALS.map((meal) => (
-          <MealSection key={meal.name} meal={meal} />
+          <MealSection
+            key={meal.name}
+            meal={meal}
+            onEdit={(m, f) => setEditing({ meal: m, food: f })}
+          />
         ))}
       </ScrollView>
+
+      <EditFoodModal
+        meal={editing?.meal ?? null}
+        food={editing?.food ?? null}
+        onClose={() => setEditing(null)}
+      />
     </SafeAreaView>
   );
 }
@@ -79,8 +101,9 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: '#f0f0f4',
   },
+  itemTap: { flex: 1, flexDirection: 'row', alignItems: 'center' },
   itemName: { fontWeight: '600' },
   itemMacros: { color: '#888', fontSize: 12, marginTop: 2 },
-  itemCal: { color: '#666', marginRight: 12 },
+  itemCal: { color: '#666', marginHorizontal: 12 },
   remove: { color: '#e5484d', fontSize: 16 },
-});
+}); 

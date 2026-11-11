@@ -53,6 +53,8 @@ export const t = {
     kcal: 'kcal',
     cancel: 'Cancel',
     add: 'Add',
+    editFood: 'Edit food',
+    save: 'Save',
   },
 
   // Profile page
