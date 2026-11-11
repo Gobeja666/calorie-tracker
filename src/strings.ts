@@ -165,5 +165,7 @@ export const t = {
     custom: 'Custom',
     customPlaceholder: 'Hours (1-72)',
     set: 'Set',
+    edit: 'Edit',
+    done: 'Done',
   },
 };

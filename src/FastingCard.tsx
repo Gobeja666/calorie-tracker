@@ -7,12 +7,18 @@ import { t } from './strings';
 type Fast = { start: number; end: number; goalHours: number };
 type FastingData = {
   goalHours: number;
+  presets?: number[]; // older saved data doesn't have this
   activeStart: number | null;
   history: Fast[];
 };
 
-const INITIAL: FastingData = { goalHours: 16, activeStart: null, history: [] };
-const PROTOCOLS = [12, 14, 16, 18, 20];
+const DEFAULT_PRESETS = [12, 14, 16, 18, 20];
+const INITIAL: FastingData = {
+  goalHours: 16,
+  presets: DEFAULT_PRESETS,
+  activeStart: null,
+  history: [],
+};
 const HOUR = 3600000;
 
 const SIZE = 130;
@@ -30,19 +36,21 @@ function formatTime(ts: number) {
 }
 
 function formatDuration(ms: number) {
-  const h = Math.floor(ms / HOUR);
-  const m = Math.floor((ms % HOUR) / 60000);
-  return `${h}${t.fasting.hoursShort} ${pad(m)}${t.fasting.minutesShort}`;
+  const total = Math.floor(ms / 1000);
+  const h = Math.floor(total / 3600);
+  const m = Math.floor((total % 3600) / 60);
+  const s = total % 60;
+  return `${pad(h)}:${pad(m)}:${pad(s)}`;
 }
 
 export default function FastingCard() {
   const [data, setData] = usePersistentState<FastingData>('fasting', INITIAL, true);
   const [now, setNow] = useState(Date.now());
-  const [customOpen, setCustomOpen] = useState(false);
-  const [customInput, setCustomInput] = useState('');
+  const [editing, setEditing] = useState(false);
+  const [drafts, setDrafts] = useState<string[]>([]);
 
+  const presets = data.presets ?? DEFAULT_PRESETS;
   const active = data.activeStart !== null;
-  const isCustom = !PROTOCOLS.includes(data.goalHours);
 
   // Tick every second while a fast is running
   useEffect(() => {
@@ -83,27 +91,63 @@ export default function FastingCard() {
 
   function setGoal(h: number) {
     setData((prev) => ({ ...prev, goalHours: h }));
-    setCustomOpen(false);
   }
 
-  function applyCustom() {
-    const h = parseFloat(customInput.replace(',', '.'));
-    if (isNaN(h) || h < 1 || h > 72) return;
-    setGoal(Math.round(h * 10) / 10);
-    setCustomInput('');
+  function startEditing() {
+    setDrafts(presets.map(String));
+    setEditing(true);
+  }
+
+  function finishEditing() {
+    const newPresets = presets.map((old, i) => {
+      const v = parseFloat((drafts[i] ?? '').replace(',', '.'));
+      return isNaN(v) || v < 1 || v > 72 ? old : Math.round(v * 10) / 10;
+    });
+    // If the selected chip was edited, the goal follows its new value
+    const selectedIndex = presets.indexOf(data.goalHours);
+    setData((prev) => ({
+      ...prev,
+      presets: newPresets,
+      goalHours: selectedIndex >= 0 ? newPresets[selectedIndex] : prev.goalHours,
+    }));
+    setEditing(false);
   }
 
   return (
     <View style={styles.card}>
-      <Text style={styles.title}>{t.fasting.title}</Text>
+      <View style={styles.headerRow}>
+        <Text style={styles.title}>{t.fasting.title}</Text>
+        <Pressable
+          style={styles.editBtn}
+          onPress={editing ? finishEditing : startEditing}
+        >
+          <Text style={styles.editText}>{editing ? t.fasting.done : t.fasting.edit}</Text>
+        </Pressable>
+      </View>
       <Text style={styles.subtitle}>{t.fasting.subtitle}</Text>
 
       <View style={styles.chips}>
-        {PROTOCOLS.map((h) => {
+        {presets.map((h, i) => {
+          if (editing) {
+            return (
+              <View key={i} style={styles.editChip}>
+                <TextInput
+                  style={styles.editInput}
+                  keyboardType="numeric"
+                  value={drafts[i] ?? ''}
+                  onChangeText={(v) =>
+                    setDrafts((prev) => prev.map((d, j) => (j === i ? v : d)))
+                  }
+                  onSubmitEditing={finishEditing}
+                />
+                <Text style={styles.editUnit}>{t.fasting.hoursShort}</Text>
+              </View>
+            );
+          }
           const selected = data.goalHours === h;
           return (
             <Pressable
-              key={h}
+              key={i}
               style={[styles.chip, selected && styles.chipActive]}
               onPress={() => setGoal(h)}
             >
@@ -114,31 +158,7 @@ export default function FastingCard() {
             </Pressable>
           );
         })}
-        <Pressable
-          style={[styles.chip, isCustom && styles.chipActive]}
-          onPress={() => setCustomOpen(!customOpen)}
-        >
-          <Text style={[styles.chipText, isCustom && { color: '#fff' }]}>
-            {isCustom ? `${data.goalHours}${t.fasting.hoursShort}` : t.fasting.custom}
-          </Text>
-        </Pressable>
       </View>
-
-      {customOpen && (
-        <View style={styles.customRow}>
-          <TextInput
-            style={styles.customInput}
-            placeholder={t.fasting.customPlaceholder}
-            keyboardType="numeric"
-            value={customInput}
-            onChangeText={setCustomInput}
-            onSubmitEditing={applyCustom}
-          />
-          <Pressable style={styles.setBtn} onPress={applyCustom}>
-            <Text style={styles.setText}>{t.fasting.set}</Text>
-          </Pressable>
-        </View>
-      )}
 
       <View style={styles.row}>
         <View style={styles.ringWrap}>
@@ -215,7 +235,15 @@ export default function FastingCard() {
 
 const styles = StyleSheet.create({
   card: { backgroundColor: '#eef4ff', borderRadius: 16, padding: 18, marginTop: 12 },
+  headerRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   title: { fontSize: 20, fontWeight: '700' },
+  editBtn: {
+    backgroundColor: '#fff',
+    borderRadius: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+  },
+  editText: { color: '#3b82f6', fontWeight: '700' },
   subtitle: { color: '#777', fontSize: 12, marginTop: 4, marginBottom: 12 },
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 16 },
   chip: {
@@ -226,21 +254,23 @@ const styles = StyleSheet.create({
   },
   chipActive: { backgroundColor: '#3b82f6' },
   chipText: { fontWeight: '700', color: '#333' },
-  customRow: { flexDirection: 'row', gap: 8, marginBottom: 16 },
-  customInput: {
-    flex: 1,
+  editChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
     backgroundColor: '#fff',
-    borderRadius: 10,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: '#3b82f6',
+    paddingHorizontal: 10,
   },
-  setBtn: {
-    backgroundColor: '#3b82f6',
-    borderRadius: 10,
-    justifyContent: 'center',
-    paddingHorizontal: 18,
+  editInput: {
+    width: 40,
+    paddingVertical: 6,
+    textAlign: 'center',
+    fontWeight: '700',
+    color: '#333',
   },
-  setText: { color: '#fff', fontWeight: '700' },
+  editUnit: { fontWeight: '700', color: '#666' },
   row: { flexDirection: 'row', alignItems: 'center' },
   ringWrap: { width: SIZE, height: SIZE, justifyContent: 'center', alignItems: 'center' },
   ringCenter: { position: 'absolute', alignItems: 'center' },
