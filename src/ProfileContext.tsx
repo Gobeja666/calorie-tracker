@@ -1,5 +1,7 @@
-import { createContext, useContext, useState, ReactNode } from 'react';
+import { createContext, useContext, useEffect, ReactNode } from 'react';
 import { usePersistentState } from './usePersistentState';
+import { supabase } from './supabase';
+import { useAuth } from './AuthContext';
 
 export type GoalType = 'lose' | 'maintain' | 'gain';
 export type Profile = {
@@ -31,8 +33,53 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
   const [profile, setProfile] = usePersistentState<Profile | null>('profile', null);
   const goal = profile ? calculateGoal(profile) : DEFAULT_GOAL;
 
+  const { session, loading } = useAuth();
+  const userId = session?.user.id;
+
+  // Load the cloud profile when a user logs in; clear it when they log out
+  useEffect(() => {
+    if (loading) return;
+    if (!userId) {
+      setProfile(null);
+      return;
+    }
+    supabase
+      .from('profiles')
+      .select('age, height, weight, goal_type')
+      .eq('id', userId)
+      .single()
+      .then(({ data }) => {
+        if (data && data.age && data.height && data.weight) {
+          setProfile({
+            age: Number(data.age),
+            height: Number(data.height),
+            weight: Number(data.weight),
+            goalType: data.goal_type as GoalType,
+          });
+        }
+      });
+  }, [userId, loading]);
+
+  // Save locally, and to the cloud when logged in
+  function saveProfile(p: Profile) {
+    setProfile(p);
+    if (!userId) return;
+    supabase
+      .from('profiles')
+      .update({
+        age: p.age,
+        height: p.height,
+        weight: p.weight,
+        goal_type: p.goalType,
+      })
+      .eq('id', userId)
+      .then(({ error }) => {
+        if (error) console.warn('Could not save profile to the cloud:', error.message);
+      });
+  }
+
   return (
-    <ProfileContext.Provider value={{ profile, goal, saveProfile: setProfile }}>
+    <ProfileContext.Provider value={{ profile, goal, saveProfile }}>
       {children}
     </ProfileContext.Provider>
   );

@@ -64,8 +64,8 @@ export default function NavBar() {
         icon="settings-outline"
         activeIcon="settings"
         label={t.nav.settings}
-        active={pathname === '/profile'}
-        onPress={() => router.replace('/profile')}
+        active={pathname === '/settings' || pathname === '/profile'}
+        onPress={() => router.replace('/settings')}
       />
 
       <AddFoodModal visible={addOpen} onClose={() => setAddOpen(false)} />

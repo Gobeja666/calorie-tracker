@@ -14,7 +14,10 @@ export default function RegisterScreen() {
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [age, setAge] = useState('');
+  const [confirm, setConfirm] = useState('');
+  const [day, setDay] = useState('');
+  const [month, setMonth] = useState('');
+  const [year, setYear] = useState('');
   const [height, setHeight] = useState('');
   const [weight, setWeight] = useState('');
   const [goalType, setGoalType] = useState<GoalType>('maintain');
@@ -22,14 +25,38 @@ export default function RegisterScreen() {
   const [message, setMessage] = useState('');
 
   async function handleRegister() {
-    const a = parseFloat(age);
+    const d = parseInt(day, 10);
+    const mo = parseInt(month, 10);
+    const y = parseInt(year, 10);
     const h = parseFloat(height);
     const w = parseFloat(weight.replace(',', '.'));
 
-    if (!email.includes('@') || password.length < 6 || !(a > 0 && h > 0 && w > 0)) {
+    if (!email.includes('@') || password.length < 6 || !(h > 0 && w > 0)) {
       setMessage(t.register.invalidInput);
       return;
     }
+    if (password !== confirm) {
+      setMessage(t.register.passwordsDontMatch);
+      return;
+    }
+
+    // Check the date is real and work out the age
+    const dob = new Date(y, mo - 1, d);
+    const validDate =
+      dob.getFullYear() === y && dob.getMonth() === mo - 1 && dob.getDate() === d;
+    const today = new Date();
+    let a = today.getFullYear() - y;
+    if (
+      today.getMonth() < mo - 1 ||
+      (today.getMonth() === mo - 1 && today.getDate() < d)
+    ) {
+      a--;
+    }
+    if (!validDate || a < 10 || a > 120) {
+      setMessage(t.register.invalidDate);
+      return;
+    }
+    const dobString = `${y}-${String(mo).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
 
     setBusy(true);
     setMessage('');
@@ -38,7 +65,7 @@ export default function RegisterScreen() {
       email: email.trim(),
       password,
       options: {
-        data: { age: a, height: h, weight: w, goal_type: goalType },
+        data: { age: a, date_of_birth: dobString, height: h, weight: w, goal_type: goalType },
       },
     });
 
@@ -88,17 +115,45 @@ export default function RegisterScreen() {
             value={password}
             onChangeText={setPassword}
           />
+
+          <Text style={styles.label}>{t.register.confirmPassword}</Text>
+          <TextInput
+            style={styles.input}
+            secureTextEntry
+            autoCapitalize="none"
+            value={confirm}
+            onChangeText={setConfirm}
+          />
         </View>
 
         <View style={styles.card}>
-          <Text style={styles.label}>{t.profile.age}</Text>
-          <TextInput
-            style={styles.input}
-            placeholder={t.profile.agePlaceholder}
-            keyboardType="numeric"
-            value={age}
-            onChangeText={setAge}
-          />
+          <Text style={styles.label}>{t.register.dateOfBirth}</Text>
+          <View style={{ flexDirection: 'row', gap: 8 }}>
+            <TextInput
+              style={[styles.input, { flex: 1, minWidth: 0 }]}
+              placeholder={t.register.day}
+              keyboardType="numeric"
+              maxLength={2}
+              value={day}
+              onChangeText={setDay}
+            />
+            <TextInput
+              style={[styles.input, { flex: 1, minWidth: 0 }]}
+              placeholder={t.register.month}
+              keyboardType="numeric"
+              maxLength={2}
+              value={month}
+              onChangeText={setMonth}
+            />
+            <TextInput
+              style={[styles.input, { flex: 2, minWidth: 0 }]}
+              placeholder={t.register.year}
+              keyboardType="numeric"
+              maxLength={4}
+              value={year}
+              onChangeText={setYear}
+            />
+          </View>
 
           <Text style={styles.label}>{t.profile.height}</Text>
           <TextInput

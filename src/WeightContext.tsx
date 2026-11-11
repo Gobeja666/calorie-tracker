@@ -22,7 +22,7 @@ function sameDay(a: string, b: string) {
 }
 
 export function WeightProvider({ children }: { children: ReactNode }) {
-  const [entries, setEntries] = usePersistentState<WeightEntry[]>('weights', []);
+  const [entries, setEntries] = usePersistentState<WeightEntry[]>('weights', [], true);
 
   function addWeight(weight: number, date: Date) {
     // Store at noon so the day never shifts because of time zones

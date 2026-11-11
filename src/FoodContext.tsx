@@ -48,7 +48,7 @@ type FoodContextType = {
 const FoodContext = createContext<FoodContextType | null>(null);
 
 export function FoodProvider({ children }: { children: ReactNode }) {
-  const [days, setDays] = usePersistentState<DaysData>('mealsByDate', {});
+  const [days, setDays] = usePersistentState<DaysData>('mealsByDate', {}, true);
   const [selectedDate, setSelectedDate] = useState(toDateKey(new Date()));
 
   const meals = days[selectedDate] ?? emptyMeals();
