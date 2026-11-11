@@ -168,4 +168,29 @@ export const t = {
     edit: 'Edit',
     done: 'Done',
   },
+
+    // Notifications
+  notifications: {
+    title: 'Notifications',
+    webOnly: 'Notifications work in the phone app, not in the browser.',
+    denied: 'Notifications are blocked. Allow them in your phone settings.',
+    fastGoal: 'Fasting goal reached',
+    fastOneHour: 'Fasting: 1 hour left',
+    meals: 'Meal reminders',
+    weight: 'Weight reminder (weekly)',
+    day: 'Day',
+    timePlaceholder: 'HH:MM',
+    fastGoalTitle: 'Fasting goal reached',
+    fastGoalBody: 'You made it! You can end your fast now.',
+    fastHourTitle: 'Almost there',
+    fastHourBody: 'One hour left in your fast.',
+    mealTitle: 'Meal reminder',
+    mealBody: {
+      Breakfast: 'Time to log your breakfast',
+      Lunch: 'Time to log your lunch',
+      Dinner: 'Time to log your dinner',
+    } as Record<string, string>,
+    weightTitle: 'Weigh-in time',
+    weightBody: 'Log your weight to track your progress.',
+  },
 };

@@ -4,6 +4,7 @@ import { useRouter } from 'expo-router';
 import { useAuth } from '../AuthContext';
 import { useProfile, getAge } from '../ProfileContext';
 import { t } from '../strings';
+import NotificationsCard from '../NotificationsCard';
 
 function Row({ label, value }: { label: string; value: string }) {
   return (
@@ -51,10 +52,12 @@ export default function SettingsScreen() {
             <Text style={styles.editText}>{t.settings.editProfile}</Text>
           </Pressable>
         </View>
+        <NotificationsCard />
 
         <Pressable style={styles.logoutBtn} onPress={signOut}>
           <Text style={styles.logoutText}>{t.settings.logOut}</Text>
         </Pressable>
+        
       </ScrollView>
     </SafeAreaView>
   );

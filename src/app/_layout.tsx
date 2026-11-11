@@ -5,6 +5,7 @@ import { AuthProvider, useAuth } from '../AuthContext';
 import { FoodProvider } from '../FoodContext';
 import { ProfileProvider } from '../ProfileContext';
 import { WeightProvider } from '../WeightContext';
+import { NotificationsProvider, NotificationManager } from '../NotificationsContext';
 import NavBar from '../NavBar';
 import { t } from '../strings';
 
@@ -27,25 +28,28 @@ function AuthGate() {
 export default function RootLayout() {
   return (
     <AuthProvider>
-      <ProfileProvider>
-        <FoodProvider>
-          <WeightProvider>
-            <AuthGate />
-            <View style={{ flex: 1 }}>
+      <NotificationsProvider>
+        <ProfileProvider>
+          <FoodProvider>
+            <WeightProvider>
+              <AuthGate />
+              <NotificationManager />
               <View style={{ flex: 1 }}>
-                <Stack
-                  screenOptions={{
-                    headerBackVisible: false,
-                    headerTitle: t.appName,
-                    headerTitleAlign: 'center',
-                  }}
-                />
+                <View style={{ flex: 1 }}>
+                  <Stack
+                    screenOptions={{
+                      headerBackVisible: false,
+                      headerTitle: t.appName,
+                      headerTitleAlign: 'center',
+                    }}
+                  />
+                </View>
+                <NavBar />
               </View>
-              <NavBar />
-            </View>
-          </WeightProvider>
-        </FoodProvider>
-      </ProfileProvider>
+            </WeightProvider>
+          </FoodProvider>
+        </ProfileProvider>
+      </NotificationsProvider>
     </AuthProvider>
   );
 }

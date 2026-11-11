@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react';
 import { View, Text, TextInput, Pressable, StyleSheet } from 'react-native';
 import Svg, { Circle } from 'react-native-svg';
 import { usePersistentState } from './usePersistentState';
+import { useNotifSettings } from './NotificationsContext';
+import { syncFastNotifications } from './notifications';
 import { t } from './strings';
 
 type Fast = { start: number; end: number; goalHours: number };
@@ -48,6 +50,7 @@ export default function FastingCard() {
   const [now, setNow] = useState(Date.now());
   const [editing, setEditing] = useState(false);
   const [drafts, setDrafts] = useState<string[]>([]);
+  const { settings: notif } = useNotifSettings();
 
   const presets = data.presets ?? DEFAULT_PRESETS;
   const active = data.activeStart !== null;
@@ -59,6 +62,16 @@ export default function FastingCard() {
     const id = setInterval(() => setNow(Date.now()), 1000);
     return () => clearInterval(id);
   }, [active]);
+
+  // Keep the phone alerts in line with the running fast
+  useEffect(() => {
+    syncFastNotifications(
+      data.activeStart,
+      data.goalHours,
+      notif.fastGoal,
+      notif.fastOneHour
+    );
+  }, [data.activeStart, data.goalHours, notif.fastGoal, notif.fastOneHour]);
 
   const goalMs = data.goalHours * HOUR;
   const elapsed = active ? Math.max(now - data.activeStart!, 0) : 0;
