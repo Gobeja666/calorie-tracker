@@ -28,7 +28,7 @@ export default function ProfileScreen() {
   function handleSave() {
     if (!valid) return;
     saveProfile({ age: a, height: h, weight: w, goalType });
-    router.back();
+    router.replace('/');
   }
 
   return (
