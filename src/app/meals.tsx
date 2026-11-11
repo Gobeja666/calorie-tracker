@@ -1,25 +1,10 @@
 import { Ionicons } from '@expo/vector-icons';
-import { useState } from 'react';
-import {
-  Modal,
-  Pressable, ScrollView,
-  StyleSheet,
-  Text, TextInput,
-  View,
-} from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import DayPicker from '../DayPicker';
 import { useFood } from '../FoodContext';
+import { MEALS } from '../mealTypes';
 import { t } from '../strings';
-
-type IconName = React.ComponentProps<typeof Ionicons>['name'];
-
-const MEALS: { name: string; icon: IconName; color: string }[] = [
-  { name: 'Breakfast', icon: 'cafe', color: '#f59e0b' },
-  { name: 'Lunch', icon: 'restaurant', color: '#30a46c' },
-  { name: 'Dinner', icon: 'moon', color: '#6366f1' },
-  { name: 'Snacks', icon: 'nutrition', color: '#e5484d' },
-];
 
 function MealSection({ meal }: { meal: (typeof MEALS)[number] }) {
   const { meals, removeFood } = useFood();
@@ -64,134 +49,15 @@ function MealSection({ meal }: { meal: (typeof MEALS)[number] }) {
 }
 
 export default function MealsScreen() {
-  const { addFood } = useFood();
-  const [open, setOpen] = useState(false);
-  const [selected, setSelected] = useState('Breakfast');
-  const [name, setName] = useState('');
-  const [calories, setCalories] = useState('');
-  const [protein, setProtein] = useState('');
-  const [carbs, setCarbs] = useState('');
-  const [fat, setFat] = useState('');
-
-  function close() {
-    setOpen(false);
-    setName('');
-    setCalories('');
-    setProtein('');
-    setCarbs('');
-    setFat('');
-  }
-
-  function toGrams(v: string) {
-    const n = parseFloat(v.replace(',', '.'));
-    return isNaN(n) || n < 0 ? 0 : n;
-  }
-
-  function handleAdd() {
-    const cal = parseFloat(calories.replace(',', '.'));
-    if (!name.trim() || isNaN(cal) || cal <= 0) return;
-    addFood(selected, name.trim(), cal, {
-      protein: toGrams(protein),
-      carbs: toGrams(carbs),
-      fat: toGrams(fat),
-    });
-    close();
-  }
-
   return (
     <SafeAreaView style={styles.container}>
       <DayPicker />
 
-      <ScrollView contentContainerStyle={{ gap: 12, paddingBottom: 100 }}>
+      <ScrollView contentContainerStyle={{ gap: 12, paddingBottom: 24 }}>
         {MEALS.map((meal) => (
           <MealSection key={meal.name} meal={meal} />
         ))}
       </ScrollView>
-
-      <Pressable style={styles.fab} onPress={() => setOpen(true)}>
-        <Ionicons name="add" size={32} color="#fff" />
-      </Pressable>
-
-      <Modal visible={open} transparent animationType="fade" onRequestClose={close}>
-        <View style={styles.overlay}>
-          <View style={styles.modal}>
-            <Text style={styles.modalTitle}>{t.meals.addFood}</Text>
-
-            <View style={styles.chips}>
-              {MEALS.map((m) => {
-                const active = selected === m.name;
-                return (
-                  <Pressable
-                    key={m.name}
-                    style={[
-                      styles.chip,
-                      active && { backgroundColor: m.color, borderColor: m.color },
-                    ]}
-                    onPress={() => setSelected(m.name)}
-                  >
-                    <Ionicons
-                      name={m.icon}
-                      size={16}
-                      color={active ? '#fff' : m.color}
-                    />
-                    <Text style={[styles.chipText, active && { color: '#fff' }]}>
-                      {t.mealNames[m.name]}
-                    </Text>
-                  </Pressable>
-                );
-              })}
-            </View>
-
-            <TextInput
-              style={styles.input}
-              placeholder={t.meals.foodName}
-              value={name}
-              onChangeText={setName}
-            />
-            <TextInput
-              style={styles.input}
-              placeholder={t.meals.caloriesPlaceholder}
-              keyboardType="numeric"
-              value={calories}
-              onChangeText={setCalories}
-            />
-
-            <View style={styles.macroRow}>
-              <TextInput
-                style={[styles.input, { flex: 1 }]}
-                placeholder={t.meals.proteinPlaceholder}
-                keyboardType="numeric"
-                value={protein}
-                onChangeText={setProtein}
-              />
-              <TextInput
-                style={[styles.input, { flex: 1 }]}
-                placeholder={t.meals.carbsPlaceholder}
-                keyboardType="numeric"
-                value={carbs}
-                onChangeText={setCarbs}
-              />
-              <TextInput
-                style={[styles.input, { flex: 1 }]}
-                placeholder={t.meals.fatPlaceholder}
-                keyboardType="numeric"
-                value={fat}
-                onChangeText={setFat}
-                onSubmitEditing={handleAdd}
-              />
-            </View>
-
-            <View style={styles.modalButtons}>
-              <Pressable style={styles.cancelBtn} onPress={close}>
-                <Text style={styles.cancelText}>{t.meals.cancel}</Text>
-              </Pressable>
-              <Pressable style={styles.addBtn} onPress={handleAdd}>
-                <Text style={styles.addText}>{t.meals.add}</Text>
-              </Pressable>
-            </View>
-          </View>
-        </View>
-      </Modal>
     </SafeAreaView>
   );
 }
@@ -217,60 +83,4 @@ const styles = StyleSheet.create({
   itemMacros: { color: '#888', fontSize: 12, marginTop: 2 },
   itemCal: { color: '#666', marginRight: 12 },
   remove: { color: '#e5484d', fontSize: 16 },
-
-  fab: {
-    position: 'absolute',
-    bottom: 24,
-    alignSelf: 'center',
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    backgroundColor: '#3b82f6',
-    justifyContent: 'center',
-    alignItems: 'center',
-    elevation: 4,
-    shadowColor: '#000',
-    shadowOpacity: 0.2,
-    shadowRadius: 6,
-    shadowOffset: { width: 0, height: 3 },
-  },
-
-  overlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.4)',
-    justifyContent: 'center',
-    padding: 20,
-  },
-  modal: { backgroundColor: '#fff', borderRadius: 16, padding: 20, gap: 12 },
-  modalTitle: { fontSize: 20, fontWeight: '700' },
-  chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  chip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: '#e0e0e6',
-  },
-  chipText: { fontWeight: '600', color: '#333' },
-  input: {
-    backgroundColor: '#f6f7f9',
-    borderRadius: 10,
-    paddingHorizontal: 12,
-    paddingVertical: 12,
-  },
-  macroRow: { flexDirection: 'row', gap: 8 },
-  modalButtons: { flexDirection: 'row', gap: 8, marginTop: 4 },
-  cancelBtn: {
-    flex: 1, paddingVertical: 12, borderRadius: 10,
-    backgroundColor: '#f0f0f4', alignItems: 'center',
-  },
-  cancelText: { fontWeight: '700', color: '#555' },
-  addBtn: {
-    flex: 1, paddingVertical: 12, borderRadius: 10,
-    backgroundColor: '#3b82f6', alignItems: 'center',
-  },
-  addText: { color: '#fff', fontWeight: '700' },
 });

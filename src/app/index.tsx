@@ -1,15 +1,15 @@
-import { Ionicons } from '@expo/vector-icons';
-import { Stack, useRouter } from 'expo-router';
-import { ComponentRef, useRef, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useRef, useState, ComponentRef } from 'react';
+import { View, Text, Pressable, ScrollView, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useRouter } from 'expo-router';
 import Svg, { Circle } from 'react-native-svg';
-import DayPicker from '../DayPicker';
+import { Ionicons } from '@expo/vector-icons';
 import { useFood } from '../FoodContext';
-import MacrosCard from '../MacrosCard';
 import { useProfile } from '../ProfileContext';
 import { t } from '../strings';
 import WeightCard from '../WeightCard';
+import DayPicker from '../DayPicker';
+import MacrosCard from '../MacrosCard';
 
 const EXERCISE = 0;
 
@@ -56,101 +56,98 @@ export default function TodayScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <Stack.Screen
-        options={{
-          headerRight: () => (
-            <Pressable onPress={() => router.push('/profile')}>
-              <Ionicons name="person-circle-outline" size={30} color="#3b82f6" />
-            </Pressable>
-          ),
-        }}
-      />
 
-      <DayPicker />
+      <ScrollView
+        contentContainerStyle={styles.content}
+        showsVerticalScrollIndicator={false}
+      >
+        <DayPicker />
 
-      <View onLayout={(e) => setPageW(e.nativeEvent.layout.width)}>
-        {pageW > 0 && (
-          <ScrollView
-            ref={scrollRef}
-            horizontal
-            pagingEnabled
-            showsHorizontalScrollIndicator={false}
-            scrollEventThrottle={16}
-            onScroll={(e) =>
-              setPage(Math.round(e.nativeEvent.contentOffset.x / pageW))
-            }
-          >
-            {/* Page 1: Calories */}
-            <View style={{ width: pageW }}>
-              <Pressable style={styles.card} onPress={() => router.push('/meals')}>
-                <Text style={styles.title}>{t.today.calories}</Text>
-                <Text style={styles.formula}>{t.today.formula}</Text>
+        <View onLayout={(e) => setPageW(e.nativeEvent.layout.width)}>
+          {pageW > 0 && (
+            <ScrollView
+              ref={scrollRef}
+              horizontal
+              pagingEnabled
+              showsHorizontalScrollIndicator={false}
+              scrollEventThrottle={16}
+              onScroll={(e) =>
+                setPage(Math.round(e.nativeEvent.contentOffset.x / pageW))
+              }
+            >
+              {/* Page 1: Calories */}
+              <View style={{ width: pageW }}>
+                <Pressable style={styles.card} onPress={() => router.navigate('/meals')}>
+                  <Text style={styles.title}>{t.today.calories}</Text>
+                  <Text style={styles.formula}>{t.today.formula}</Text>
 
-                <View style={styles.row}>
-                  <View style={styles.ringWrap}>
-                    <Svg
-                      width={SIZE}
-                      height={SIZE}
-                      style={{ transform: [{ rotate: '-90deg' }] }}
-                    >
-                      <Circle
-                        cx={SIZE / 2}
-                        cy={SIZE / 2}
-                        r={RADIUS}
-                        stroke="#d6e4fb"
-                        strokeWidth={STROKE}
-                        fill="none"
-                      />
-                      <Circle
-                        cx={SIZE / 2}
-                        cy={SIZE / 2}
-                        r={RADIUS}
-                        stroke="#3b82f6"
-                        strokeWidth={STROKE}
-                        fill="none"
-                        strokeLinecap="round"
-                        strokeDasharray={CIRCUMFERENCE}
-                        strokeDashoffset={CIRCUMFERENCE * (1 - progress)}
-                      />
-                    </Svg>
-                    <View style={styles.ringCenter}>
-                      <Text style={styles.big}>{remaining}</Text>
-                      <Text style={styles.small}>{t.today.remaining}</Text>
+                  <View style={styles.row}>
+                    <View style={styles.ringWrap}>
+                      <Svg
+                        width={SIZE}
+                        height={SIZE}
+                        style={{ transform: [{ rotate: '-90deg' }] }}
+                      >
+                        <Circle
+                          cx={SIZE / 2}
+                          cy={SIZE / 2}
+                          r={RADIUS}
+                          stroke="#d6e4fb"
+                          strokeWidth={STROKE}
+                          fill="none"
+                        />
+                        <Circle
+                          cx={SIZE / 2}
+                          cy={SIZE / 2}
+                          r={RADIUS}
+                          stroke="#3b82f6"
+                          strokeWidth={STROKE}
+                          fill="none"
+                          strokeLinecap="round"
+                          strokeDasharray={CIRCUMFERENCE}
+                          strokeDashoffset={CIRCUMFERENCE * (1 - progress)}
+                        />
+                      </Svg>
+                      <View style={styles.ringCenter}>
+                        <Text style={styles.big}>{remaining}</Text>
+                        <Text style={styles.small}>{t.today.remaining}</Text>
+                      </View>
+                    </View>
+
+                    <View style={styles.stats}>
+                      <Stat icon="flag" color="#555" label={t.today.baseGoal} value={GOAL} />
+                      <Stat icon="restaurant" color="#3b82f6" label={t.today.food} value={FOOD} />
+                      <Stat icon="flame" color="#f59e0b" label={t.today.exercise} value={EXERCISE} />
                     </View>
                   </View>
+                </Pressable>
+              </View>
 
-                  <View style={styles.stats}>
-                    <Stat icon="flag" color="#555" label={t.today.baseGoal} value={GOAL} />
-                    <Stat icon="restaurant" color="#3b82f6" label={t.today.food} value={FOOD} />
-                    <Stat icon="flame" color="#f59e0b" label={t.today.exercise} value={EXERCISE} />
-                  </View>
-                </View>
+              {/* Page 2: Macros */}
+              <View style={{ width: pageW }}>
+                <MacrosCard />
+              </View>
+            </ScrollView>
+          )}
+
+          <View style={styles.dots}>
+            {[0, 1].map((i) => (
+              <Pressable key={i} onPress={() => goToPage(i)} hitSlop={8}>
+                <View style={[styles.dot, page === i && styles.dotActive]} />
               </Pressable>
-            </View>
-
-            {/* Page 2: Macros */}
-            <View style={{ width: pageW }}>
-              <MacrosCard />
-            </View>
-          </ScrollView>
-        )}
-
-        <View style={styles.dots}>
-          {[0, 1].map((i) => (
-            <Pressable key={i} onPress={() => goToPage(i)} hitSlop={8}>
-              <View style={[styles.dot, page === i && styles.dotActive]} />
-            </Pressable>
-          ))}
+            ))}
+          </View>
         </View>
-      </View>
 
-      <WeightCard />
+        <WeightCard />
+      </ScrollView>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f6f7f9', padding: 16 },
+  container: { flex: 1, backgroundColor: '#f6f7f9' },
+  content: { padding: 16, paddingBottom: 48 },
   card: { backgroundColor: '#eef4ff', borderRadius: 16, padding: 18 },
   title: { fontSize: 20, fontWeight: '700' },
   formula: { color: '#777', fontSize: 12, marginTop: 4, marginBottom: 16 },

@@ -1,4 +1,7 @@
 export const t = {
+
+  appName: 'MyFitnessApp',
+
   // Top bar titles
   screenTitles: {
     today: 'Today',
@@ -93,5 +96,12 @@ export const t = {
     today: 'Today',
     weekdays: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'],
     months: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+  },
+
+    // Bottom navigation bar
+  nav: {
+    home: 'Home',
+    meals: 'Meals',
+    settings: 'Settings',
   },
 };
