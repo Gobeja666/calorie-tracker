@@ -147,4 +147,23 @@ export const t = {
     cm: 'cm',
     logOut: 'Log out',
   },
+
+    // Fasting tracker (Today page)
+  fasting: {
+    title: 'Fasting',
+    subtitle: 'Choose a fasting window and track it',
+    hoursShort: 'h',
+    minutesShort: 'm',
+    ofGoal: 'of',
+    start: 'Start fasting',
+    end: 'End fasting',
+    started: 'Started',
+    goalAt: 'Goal reached at',
+    goalReached: 'Goal reached!',
+    notFasting: 'Not fasting',
+    completed: 'Completed fasts',
+    custom: 'Custom',
+    customPlaceholder: 'Hours (1-72)',
+    set: 'Set',
+  },
 };

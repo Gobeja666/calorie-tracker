@@ -10,6 +10,7 @@ import { t } from '../strings';
 import WeightCard from '../WeightCard';
 import DayPicker from '../DayPicker';
 import MacrosCard from '../MacrosCard';
+import FastingCard from '../FastingCard';
 
 const EXERCISE = 0;
 
@@ -140,6 +141,7 @@ export default function TodayScreen() {
         </View>
 
         <WeightCard />
+        <FastingCard />
       </ScrollView>
     </SafeAreaView>
   );
