@@ -225,4 +225,16 @@ export const t = {
     uploadError: 'Could not upload the photo',
     saveError: 'Could not save',
   },
+
+    // AI scanner
+  ai: {
+    takePhoto: 'Take photo',
+    choosePhoto: 'Choose photo',
+    analyzing: 'Analyzing your meal...',
+    done: 'AI estimate filled in below. Check and edit the numbers.',
+    notFood: 'No food found in the photo. Try another one.',
+    error: 'Could not analyze the photo',
+    cameraDenied: 'Camera access is blocked. Allow it in your phone settings.',
+  },
+  
 };

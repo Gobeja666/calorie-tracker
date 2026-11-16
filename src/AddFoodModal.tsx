@@ -7,6 +7,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useFood, Food } from './FoodContext';
 import { MEALS, IconName } from './mealTypes';
 import { t } from './strings';
+import AiScanner, { AiResult } from './AiScanner';
 
 type Per100 = { name: string; cal: number; protein: number; carbs: number; fat: number };
 type Method = 'search' | 'ai' | 'barcode' | 'manual';
@@ -187,6 +188,15 @@ export default function AddFoodModal({
     setFat(f.fat ? String(f.fat) : '');
   }
 
+  function pickAi(r: AiResult) {
+    setPicked(null);
+    setName(r.name);
+    setCalories(String(Math.round(r.calories)));
+    setProtein(String(round1(r.protein)));
+    setCarbs(String(round1(r.carbs)));
+    setFat(String(round1(r.fat)));
+  }
+
   function changeGrams(v: string) {
     setGrams(v);
     const g = parseFloat(v.replace(',', '.'));
@@ -266,7 +276,8 @@ export default function AddFoodModal({
               })}
             </View>
 
-            {(method === 'ai' || method === 'barcode') && (
+            {method === 'ai' && <AiScanner onResult={pickAi} />}
+            {method === 'barcode' && (
               <Text style={styles.hint}>{t.meals.comingSoon}</Text>
             )}
 
