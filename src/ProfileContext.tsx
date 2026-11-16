@@ -4,12 +4,16 @@ import { supabase } from './supabase';
 import { useAuth } from './AuthContext';
 
 export type GoalType = 'lose' | 'maintain' | 'gain';
+export type Sex = 'male' | 'female';
+export type ActivityLevel = 'sedentary' | 'light' | 'moderate' | 'active';
 export type Profile = {
   age: number; // fallback for accounts without a date of birth
   dateOfBirth?: string; // "1995-02-28"
   height: number; // cm
   weight: number; // kg
   goalType: GoalType;
+  sex: Sex;
+  activityLevel: ActivityLevel;
 };
 
 const DEFAULT_GOAL = 1200;
@@ -43,10 +47,18 @@ export function getAge(p: Profile): number {
   return p.dateOfBirth ? ageFromDob(p.dateOfBirth) : p.age;
 }
 
+const ACTIVITY_MULT: Record<ActivityLevel, number> = {
+  sedentary: 1.2,
+  light: 1.375,
+  moderate: 1.55,
+  active: 1.725,
+};
+
 export function calculateGoal(p: Profile): number {
-  // Mifflin-St Jeor formula (average of male and female), light activity
-  const bmr = 10 * p.weight + 6.25 * p.height - 5 * getAge(p) - 78;
-  const maintenance = bmr * 1.2;
+  const base = 10 * p.weight + 6.25 * p.height - 5 * getAge(p);
+  const offset = p.sex === 'male' ? 5 : p.sex === 'female' ? -161 : -78;
+  const mult = ACTIVITY_MULT[p.activityLevel ?? 'light'];
+  const maintenance = (base + offset) * mult;
   const adjust = p.goalType === 'lose' ? -500 : p.goalType === 'gain' ? 500 : 0;
   return Math.max(1200, Math.round(maintenance + adjust));
 }
@@ -75,7 +87,7 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
     }
     supabase
       .from('profiles')
-      .select('age, date_of_birth, height, weight, goal_type')
+      .select('age, date_of_birth, height, weight, goal_type, sex, activity_level')
       .eq('id', userId)
       .single()
       .then(({ data }) => {
@@ -88,6 +100,8 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
             height: Number(data.height),
             weight: Number(data.weight),
             goalType: data.goal_type as GoalType,
+            sex: data.sex as Sex,
+            activityLevel: data.activity_level as ActivityLevel,
           });
         }
       });

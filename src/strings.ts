@@ -87,6 +87,18 @@ export const t = {
     yourDailyGoal: 'Your daily goal',
     fillAllFields: 'Fill in age, height and weight to see your goal',
     save: 'Save',
+        sex: 'Sex',
+    sexOptions: {
+      male: 'Male',
+      female: 'Female',
+    } as Record<string, string>,
+    activityLevel: 'Activity level',
+    activityOptions: {
+      sedentary: 'Sedentary',
+      light: 'Lightly active',
+      moderate: 'Moderately active',
+      active: 'Very active',
+    } as Record<string, string>,
   },
 
   // Weight tracking (Today page)

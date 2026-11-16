@@ -51,6 +51,15 @@ export default function SettingsScreen() {
           />
           <Row label={t.profile.yourDailyGoal} value={`${goal} ${t.meals.kcal}`} />
 
+                    <Row
+            label={t.profile.sex}
+            value={t.profile.sexOptions[profile?.sex ?? 'male']}
+          />
+          <Row
+            label={t.profile.activityLevel}
+            value={t.profile.activityOptions[profile?.activityLevel ?? 'light']}
+          />
+
           <Pressable style={styles.editBtn} onPress={() => router.replace('/profile')}>
             <Text style={styles.editText}>{t.settings.editProfile}</Text>
           </Pressable>

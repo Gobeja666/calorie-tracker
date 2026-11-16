@@ -3,11 +3,13 @@ import { View, Text, TextInput, Pressable, ScrollView, StyleSheet } from 'react-
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import {
-  useProfile, calculateGoal, parseDob, ageFromDob, GoalType,
+  useProfile, calculateGoal, parseDob, ageFromDob, GoalType, Sex, ActivityLevel,
 } from '../ProfileContext';
 import { t } from '../strings';
 
 const GOAL_TYPES: GoalType[] = ['lose', 'maintain', 'gain'];
+const SEXES: Sex[] = ['male', 'female'];
+const ACTIVITIES: ActivityLevel[] = ['sedentary', 'light', 'moderate', 'active'];
 
 export default function ProfileScreen() {
   const router = useRouter();
@@ -21,6 +23,10 @@ export default function ProfileScreen() {
   const [weight, setWeight] = useState(profile ? String(profile.weight) : '');
   const [goalType, setGoalType] = useState<GoalType>(profile?.goalType ?? 'maintain');
   const [error, setError] = useState('');
+  const [sex, setSex] = useState<Sex>(profile?.sex ?? 'male');
+  const [activityLevel, setActivityLevel] = useState<ActivityLevel>(
+    profile?.activityLevel ?? 'light'
+  );
 
   const dob = parseDob(day, month, year);
   const h = parseFloat(height.replace(',', '.'));
@@ -35,6 +41,8 @@ export default function ProfileScreen() {
           height: h,
           weight: w,
           goalType,
+          sex,
+          activityLevel,
         })
       : null;
 
@@ -51,6 +59,8 @@ export default function ProfileScreen() {
       height: h,
       weight: w,
       goalType,
+      sex,
+      activityLevel,
     });
     router.replace('/settings');
   }
@@ -119,6 +129,46 @@ export default function ProfileScreen() {
                 >
                   <Text style={[styles.chipText, active && { color: '#fff' }]}>
                     {t.profile.goalOptions[g]}
+                  </Text>
+                </Pressable>
+              );
+            })}
+          </View>
+        </View>
+
+                <View style={styles.card}>
+          <Text style={styles.label}>{t.profile.sex}</Text>
+          <View style={styles.chips}>
+            {SEXES.map((s) => {
+              const active = sex === s;
+              return (
+                <Pressable
+                  key={s}
+                  style={[styles.chip, active && styles.chipActive]}
+                  onPress={() => setSex(s)}
+                >
+                  <Text style={[styles.chipText, active && { color: '#fff' }]}>
+                    {t.profile.sexOptions[s]}
+                  </Text>
+                </Pressable>
+              );
+            })}
+          </View>
+        </View>
+
+        <View style={styles.card}>
+          <Text style={styles.label}>{t.profile.activityLevel}</Text>
+          <View style={styles.chips}>
+            {ACTIVITIES.map((a) => {
+              const active = activityLevel === a;
+              return (
+                <Pressable
+                  key={a}
+                  style={[styles.chip, active && styles.chipActive]}
+                  onPress={() => setActivityLevel(a)}
+                >
+                  <Text style={[styles.chipText, active && { color: '#fff' }]}>
+                    {t.profile.activityOptions[a]}
                   </Text>
                 </Pressable>
               );
