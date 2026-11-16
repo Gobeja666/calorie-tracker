@@ -3,9 +3,9 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { useAuth } from '../AuthContext';
 import { useProfile, getAge } from '../ProfileContext';
-import { t } from '../strings';
 import NotificationsCard from '../NotificationsCard';
 import UserCard from '../UserCard';
+import { t } from '../strings';
 
 function Row({ label, value }: { label: string; value: string }) {
   return (
@@ -24,10 +24,12 @@ export default function SettingsScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={{ gap: 12, padding: 16 }}>
+        <UserCard />
 
-        <ScrollView contentContainerStyle={{ gap: 12, padding: 16 }}>
-         <UserCard />
-        </ScrollView>
+        <View style={styles.card}>
+          <Text style={styles.cardTitle}>{t.settings.account}</Text>
+          <Row label={t.settings.email} value={session?.user.email ?? '—'} />
+        </View>
 
         <View style={styles.card}>
           <Text style={styles.cardTitle}>{t.settings.yourProfile}</Text>
@@ -53,12 +55,12 @@ export default function SettingsScreen() {
             <Text style={styles.editText}>{t.settings.editProfile}</Text>
           </Pressable>
         </View>
+
         <NotificationsCard />
 
         <Pressable style={styles.logoutBtn} onPress={signOut}>
           <Text style={styles.logoutText}>{t.settings.logOut}</Text>
         </Pressable>
-        
       </ScrollView>
     </SafeAreaView>
   );

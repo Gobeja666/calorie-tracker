@@ -57,8 +57,13 @@ export default function NavBar() {
         </Pressable>
       </View>
 
-      {/* Blank slot for now */}
-      <View style={styles.item} />
+      <NavButton
+        icon="barbell-outline"
+        activeIcon="barbell"
+        label={t.nav.workouts}
+        active={pathname === '/workouts'}
+        onPress={() => router.replace('/workouts')}
+      />
 
       <NavButton
         icon="settings-outline"

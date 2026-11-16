@@ -11,8 +11,8 @@ import WeightCard from '../WeightCard';
 import DayPicker from '../DayPicker';
 import MacrosCard from '../MacrosCard';
 import FastingCard from '../FastingCard';
+import { useWorkout } from '../WorkoutContext';
 
-const EXERCISE = 0;
 
 const SIZE = 130;
 const STROKE = 12;
@@ -41,6 +41,7 @@ function Stat({
 export default function TodayScreen() {
   const { total: FOOD } = useFood();
   const router = useRouter();
+  const { totalCalories: EXERCISE } = useWorkout();
   const { goal: GOAL } = useProfile();
 
   const scrollRef = useRef<ComponentRef<typeof ScrollView>>(null);
@@ -118,7 +119,9 @@ export default function TodayScreen() {
                     <View style={styles.stats}>
                       <Stat icon="flag" color="#555" label={t.today.baseGoal} value={GOAL} />
                       <Stat icon="restaurant" color="#3b82f6" label={t.today.food} value={FOOD} />
-                      <Stat icon="flame" color="#f59e0b" label={t.today.exercise} value={EXERCISE} />
+                      <Pressable onPress={() => router.navigate('/workouts')}>
+                        <Stat icon="flame" color="#f59e0b" label={t.today.exercise} value={EXERCISE} />
+                      </Pressable>
                     </View>
                   </View>
                 </Pressable>

@@ -8,6 +8,7 @@ import { WeightProvider } from '../WeightContext';
 import { NotificationsProvider, NotificationManager } from '../NotificationsContext';
 import NavBar from '../NavBar';
 import { t } from '../strings';
+import { WorkoutProvider } from '../WorkoutContext';
 
 // Sends logged-out users to Login, and logged-in users away from Login/Register
 function AuthGate() {
@@ -31,7 +32,8 @@ export default function RootLayout() {
       <NotificationsProvider>
         <ProfileProvider>
           <FoodProvider>
-            <WeightProvider>
+            <WorkoutProvider>
+              <WeightProvider>
               <AuthGate />
               <NotificationManager />
               <View style={{ flex: 1 }}>
@@ -47,6 +49,7 @@ export default function RootLayout() {
                 <NavBar />
               </View>
             </WeightProvider>
+          </WorkoutProvider>
           </FoodProvider>
         </ProfileProvider>
       </NotificationsProvider>

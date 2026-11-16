@@ -118,6 +118,7 @@ export const t = {
     home: 'Home',
     meals: 'Meals',
     settings: 'Settings',
+    workouts: 'Workouts',
   },
 
     // Register page
@@ -250,6 +251,27 @@ export const t = {
     error: 'Lookup failed. Check your connection.',
     cameraDenied: 'Camera access is blocked. Allow it in your settings.',
     allowCamera: 'Allow camera',
+  },
+  
+    // Workouts
+  workouts: {
+    burned: 'kcal burned',
+    activeMinutes: 'active minutes',
+    addWorkout: 'Add workout',
+    nothingLogged: 'No workouts logged yet',
+    min: 'min',
+    namePlaceholder: 'Activity name',
+    minutesPlaceholder: 'Duration (minutes)',
+    kcalPlaceholder: 'Calories burned (kcal)',
+    estimateHint: 'Calories are estimated from your weight. You can edit them.',
+    types: {
+      Walking: 'Walking',
+      Running: 'Running',
+      Cycling: 'Cycling',
+      Gym: 'Gym / Weights',
+      Swimming: 'Swimming',
+      Custom: 'Custom',
+    } as Record<string, string>,
   },
   
 };
