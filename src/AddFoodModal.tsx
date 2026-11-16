@@ -8,6 +8,7 @@ import { useFood, Food } from './FoodContext';
 import { MEALS, IconName } from './mealTypes';
 import { t } from './strings';
 import AiScanner, { AiResult } from './AiScanner';
+import BarcodeScanner from './BarcodeScanner';
 
 type Per100 = { name: string; cal: number; protein: number; carbs: number; fat: number };
 type Method = 'search' | 'ai' | 'barcode' | 'manual';
@@ -226,7 +227,12 @@ export default function AddFoodModal({
             keyboardShouldPersistTaps="handled"
             showsVerticalScrollIndicator={false}
           >
-            <Text style={styles.modalTitle}>{t.meals.addFood}</Text>
+            <View style={styles.header}>
+              <Text style={styles.modalTitle}>{t.meals.addFood}</Text>
+              <Pressable onPress={close} hitSlop={12}>
+                <Ionicons name="close" size={26} color="#666" />
+              </Pressable>
+            </View>
 
             <View style={styles.chips}>
               {MEALS.map((m) => {
@@ -277,9 +283,7 @@ export default function AddFoodModal({
             </View>
 
             {method === 'ai' && <AiScanner onResult={pickAi} />}
-            {method === 'barcode' && (
-              <Text style={styles.hint}>{t.meals.comingSoon}</Text>
-            )}
+            {method === 'barcode' && <BarcodeScanner onResult={pick} />}
 
             {method === 'search' && (
               <>
@@ -453,6 +457,7 @@ const styles = StyleSheet.create({
   macroRow: { flexDirection: 'row', gap: 8 },
   macroInput: { flex: 1, minWidth: 0, paddingHorizontal: 8 },
   modalButtons: { flexDirection: 'row', gap: 8, marginTop: 4 },
+  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   cancelBtn: {
     flex: 1, paddingVertical: 12, borderRadius: 10,
     backgroundColor: '#f0f0f4', alignItems: 'center',

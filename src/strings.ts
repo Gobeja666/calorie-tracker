@@ -237,4 +237,19 @@ export const t = {
     cameraDenied: 'Camera access is blocked. Allow it in your phone settings.',
   },
   
+    // Barcode scanner
+  barcode: {
+    scan: 'Scan with camera',
+    stop: 'Stop scanning',
+    typeIt: 'Or type the barcode number',
+    placeholder: 'Barcode number',
+    lookup: 'Look up',
+    looking: 'Looking up...',
+    notFound: 'Product not found. Try another or enter it by hand.',
+    noNutrition: 'This product has no calorie data. Enter it by hand.',
+    error: 'Lookup failed. Check your connection.',
+    cameraDenied: 'Camera access is blocked. Allow it in your settings.',
+    allowCamera: 'Allow camera',
+  },
+  
 };
