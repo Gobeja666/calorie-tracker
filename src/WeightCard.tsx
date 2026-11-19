@@ -10,6 +10,7 @@ import Svg, { Circle, Line, Polyline } from 'react-native-svg';
 import { useProfile } from './ProfileContext';
 import { t } from './strings';
 import { useWeight } from './WeightContext';
+import { usePersistentState } from './usePersistentState';
 
 const CHART_H = 140;
 const PAD = 14;
@@ -21,6 +22,13 @@ function formatDate(iso: string) {
   return `${d.getDate()}.${d.getMonth() + 1}`;
 }
 
+function bmiInfo(bmi: number) {
+  if (bmi < 18.5) return { label: t.weight.bmiUnder, color: '#3b82f6' };
+  if (bmi < 25) return { label: t.weight.bmiNormal, color: '#30a46c' };
+  if (bmi < 30) return { label: t.weight.bmiOver, color: '#f59e0b' };
+  return { label: t.weight.bmiObese, color: '#e5484d' };
+}
+
 export default function WeightCard() {
   const { entries, addWeight, removeWeight } = useWeight();
   const { profile } = useProfile();
@@ -30,9 +38,31 @@ export default function WeightCard() {
   const [input, setInput] = useState('');
   const [daysAgo, setDaysAgo] = useState(0); // 0 = today
   const [width, setWidth] = useState(0);
+  const [goalWeight, setGoalWeight] = usePersistentState<number | null>('goalWeight', null, true);
+  const [goalOpen, setGoalOpen] = useState(false);
+  const [goalInput, setGoalInput] = useState('');
 
   const latest = entries.length > 0 ? entries[entries.length - 1].weight : null;
   const current = latest ?? profile?.weight ?? null;
+  const startWeight = entries.length > 0 ? entries[0].weight : profile?.weight ?? null;
+  let goalProgress = 0;
+  if (goalWeight !== null && current !== null && startWeight !== null) {
+    const total = startWeight - goalWeight;
+    goalProgress =
+      Math.abs(total) < 0.05
+        ? 1
+        : Math.min(Math.max((startWeight - current) / total, 0), 1);
+  }
+  const bmi =
+    profile?.height && current ? current / Math.pow(profile.height / 100, 2) : null;
+  const bmiMeta = bmi !== null ? bmiInfo(bmi) : null;
+
+  function saveGoal() {
+    const g = parseFloat(goalInput.replace(',', '.'));
+    if (isNaN(g) || g < 20 || g > 500) return;
+    setGoalWeight(g);
+    setGoalOpen(false);
+  }
 
   const now = new Date();
   const dayOptions = Array.from({ length: DAYS_BACK + 1 }, (_, i) => ({
@@ -60,8 +90,8 @@ export default function WeightCard() {
 
   // Chart points
   const values = entries.map((e) => e.weight);
-  const lo = values.length > 0 ? Math.min(...values) - 1 : 0;
-  const hi = values.length > 0 ? Math.max(...values) + 1 : 1;
+  const lo = values.length > 0 ? Math.min(...values, goalWeight ?? Infinity) - 1 : 0;
+  const hi = values.length > 0 ? Math.max(...values, goalWeight ?? -Infinity) + 1 : 1;
   const points = entries.map((e, i) => {
     const x =
       entries.length === 1
@@ -114,6 +144,18 @@ export default function WeightCard() {
               />
             ))}
 
+                        {goalWeight !== null && entries.length > 0 && (
+              <Line
+                x1={PAD}
+                x2={width - PAD}
+                y1={PAD + ((hi - goalWeight) / (hi - lo)) * (CHART_H - 2 * PAD)}
+                y2={PAD + ((hi - goalWeight) / (hi - lo)) * (CHART_H - 2 * PAD)}
+                stroke="#30a46c"
+                strokeWidth={2}
+                strokeDasharray="6 4"
+              />
+            )}
+
             {entries.length === 0 && (
               <>
                 <Polyline
@@ -161,6 +203,80 @@ export default function WeightCard() {
           </View>
         )}
       </View>
+
+      <View style={styles.goalBox}>
+        <View style={styles.goalTop}>
+          {bmi !== null && bmiMeta ? (
+            <View style={[styles.bmiBadge, { backgroundColor: bmiMeta.color + '22' }]}>
+              <Text style={[styles.bmiText, { color: bmiMeta.color }]}>
+                {t.weight.bmi} {bmi.toFixed(1)} · {bmiMeta.label}
+              </Text>
+            </View>
+          ) : (
+            <View />
+          )}
+          <Pressable
+            style={styles.editBtn}
+            onPress={() => {
+              setGoalInput(goalWeight !== null ? String(goalWeight) : '');
+              setGoalOpen(true);
+            }}
+          >
+            <Text style={styles.editText}>
+              {goalWeight !== null ? `${t.weight.goalWeight}: ${goalWeight} ${t.weight.kg}` : t.weight.setGoal}
+            </Text>
+          </Pressable>
+        </View>
+
+        {goalWeight !== null && (
+          <>
+            <View style={styles.goalTrack}>
+              <View style={[styles.goalFill, { width: `${goalProgress * 100}%` }]} />
+            </View>
+            <Text style={styles.goalLabel}>
+              {goalProgress >= 1
+                ? t.weight.goalReached
+                : `${Math.round(goalProgress * 100)}% ${t.weight.toGoal}`}
+            </Text>
+          </>
+        )}
+      </View>
+
+      {/* Goal weight popup */}
+      <Modal visible={goalOpen} transparent animationType="fade" onRequestClose={() => setGoalOpen(false)}>
+        <View style={styles.overlay}>
+          <View style={styles.modal}>
+            <Text style={styles.modalTitle}>{t.weight.goalWeight}</Text>
+            <TextInput
+              style={styles.input}
+              placeholder={t.weight.goalPlaceholder}
+              keyboardType="numeric"
+              value={goalInput}
+              onChangeText={setGoalInput}
+              onSubmitEditing={saveGoal}
+            />
+            <View style={styles.modalButtons}>
+              <Pressable style={styles.cancelBtn} onPress={() => setGoalOpen(false)}>
+                <Text style={styles.cancelText}>{t.weight.cancel}</Text>
+              </Pressable>
+              {goalWeight !== null && (
+                <Pressable
+                  style={styles.cancelBtn}
+                  onPress={() => {
+                    setGoalWeight(null);
+                    setGoalOpen(false);
+                  }}
+                >
+                  <Text style={[styles.cancelText, { color: '#e5484d' }]}>{t.weight.clearGoal}</Text>
+                </Pressable>
+              )}
+              <Pressable style={styles.saveBtn} onPress={saveGoal}>
+                <Text style={styles.saveText}>{t.weight.save}</Text>
+              </Pressable>
+            </View>
+          </View>
+        </View>
+      </Modal>
 
       {/* Log weight popup */}
       <Modal visible={open} transparent animationType="fade" onRequestClose={close}>
@@ -336,4 +452,11 @@ const styles = StyleSheet.create({
   itemDate: { flex: 1, fontWeight: '600' },
   itemWeight: { color: '#666', marginRight: 12 },
   remove: { color: '#e5484d', fontSize: 16 },
+  goalBox: { marginTop: 12, gap: 8 },
+  goalTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 8 },
+  bmiBadge: { borderRadius: 10, paddingHorizontal: 10, paddingVertical: 6 },
+  bmiText: { fontWeight: '700', fontSize: 12 },
+  goalTrack: { height: 8, borderRadius: 4, backgroundColor: '#d6e4fb', overflow: 'hidden' },
+  goalFill: { height: 8, borderRadius: 4, backgroundColor: '#30a46c' },
+  goalLabel: { color: '#666', fontSize: 12 },
 });

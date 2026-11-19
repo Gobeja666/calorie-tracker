@@ -121,6 +121,17 @@ export const t = {
     date: 'Date',
     close: 'Close',
     noEntries: 'No weights logged yet',
+    goalWeight: 'Goal weight',
+    setGoal: 'Set goal',
+    goalPlaceholder: 'Goal weight (kg)',
+    toGoal: 'to goal',
+    goalReached: 'Goal reached!',
+    clearGoal: 'Clear',
+    bmi: 'BMI',
+    bmiUnder: 'Underweight',
+    bmiNormal: 'Normal',
+    bmiOver: 'Overweight',
+    bmiObese: 'Obese',
   },
 
   // Day picker
