@@ -3,11 +3,12 @@ import { View, Text, TextInput, Pressable, ScrollView, StyleSheet } from 'react-
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import {
-  useProfile, calculateGoal, parseDob, ageFromDob, GoalType, Sex, ActivityLevel,
+  useProfile, calculateGoal, calculatePlanGoal, parseDob, ageFromDob,
+  GoalType, Sex, ActivityLevel,
 } from '../ProfileContext';
 import { t } from '../strings';
 
-const GOAL_TYPES: GoalType[] = ['lose', 'maintain', 'gain'];
+const GOAL_TYPES: GoalType[] = ['lose', 'maintain', 'gain', 'extreme'];
 const SEXES: Sex[] = ['male', 'female'];
 const ACTIVITIES: ActivityLevel[] = ['sedentary', 'light', 'moderate', 'active'];
 
@@ -27,11 +28,24 @@ export default function ProfileScreen() {
   const [activityLevel, setActivityLevel] = useState<ActivityLevel>(
     profile?.activityLevel ?? 'light'
   );
+  const [customGoal, setCustomGoal] = useState(
+    profile?.customGoal ? String(profile.customGoal) : ''
+  );
+  const cg = parseFloat(customGoal.replace(',', '.'));
+  const customValue = cg >= 800 && cg <= 10000 ? Math.round(cg) : undefined;
 
   const dob = parseDob(day, month, year);
   const h = parseFloat(height.replace(',', '.'));
   const w = parseFloat(weight.replace(',', '.'));
   const valid = dob !== null && h > 0 && w > 0;
+
+  const planGoal =
+    valid && dob
+      ? calculatePlanGoal({
+          age: ageFromDob(dob), dateOfBirth: dob, height: h, weight: w,
+          goalType, sex, activityLevel,
+        })
+      : null;
 
   const preview =
     valid && dob
@@ -43,6 +57,7 @@ export default function ProfileScreen() {
           goalType,
           sex,
           activityLevel,
+          customGoal: customValue,
         })
       : null;
 
@@ -61,6 +76,7 @@ export default function ProfileScreen() {
       goalType,
       sex,
       activityLevel,
+      customGoal: customValue,
     });
     router.replace('/settings');
   }
@@ -174,6 +190,18 @@ export default function ProfileScreen() {
               );
             })}
           </View>
+        </View>
+
+        <View style={styles.card}>
+          <Text style={styles.label}>{t.profile.customGoal}</Text>
+          <TextInput
+            style={styles.input}
+            keyboardType="numeric"
+            placeholder={planGoal ? String(planGoal) : t.meals.kcal}
+            value={customGoal}
+            onChangeText={setCustomGoal}
+          />
+          <Text style={styles.hint}>{t.profile.customGoalHint}</Text>
         </View>
 
         <View style={styles.result}>

@@ -6,7 +6,7 @@ import { supabase } from '../supabase';
 import { t } from '../strings';
 import { useProfile, GoalType, Sex, ActivityLevel } from '../ProfileContext';
 
-const GOAL_TYPES: GoalType[] = ['lose', 'maintain', 'gain'];
+const GOAL_TYPES: GoalType[] = ['lose', 'maintain', 'gain', 'extreme'];
 const SEXES: Sex[] = ['male', 'female'];
 const ACTIVITIES: ActivityLevel[] = ['sedentary', 'light', 'moderate', 'active'];
 

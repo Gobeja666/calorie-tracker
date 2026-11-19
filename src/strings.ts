@@ -83,6 +83,7 @@ export const t = {
       lose: 'Lose weight',
       maintain: 'Maintain weight',
       gain: 'Gain weight',
+      extreme: 'Extreme weight loss',
     } as Record<string, string>,
     yourDailyGoal: 'Your daily goal',
     fillAllFields: 'Fill in age, height and weight to see your goal',
@@ -99,6 +100,8 @@ export const t = {
       moderate: 'Moderately active',
       active: 'Very active',
     } as Record<string, string>,
+    customGoal: 'Custom daily goal (optional)',
+    customGoalHint: 'Leave empty to use the plan above',
   },
 
   // Weight tracking (Today page)
