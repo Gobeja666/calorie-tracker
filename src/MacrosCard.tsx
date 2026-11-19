@@ -4,6 +4,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import Svg, { Circle } from 'react-native-svg';
 import { useFood } from './FoodContext';
 import { t } from './strings';
+import { useProfile } from './ProfileContext';
 
 const SIZE = 130;
 const STROKE = 12;
@@ -13,30 +14,37 @@ const CIRCUMFERENCE = 2 * Math.PI * RADIUS;
 const COLORS = { protein: '#3b82f6', carbs: '#f59e0b', fat: '#e5484d' };
 
 function Stat({
-  icon, color, label, grams, percent,
+  icon, color, label, grams, percent, target,
 }: {
   icon: React.ComponentProps<typeof Ionicons>['name'];
   color: string;
   label: string;
   grams: number;
   percent: number;
+  target: number;
 }) {
+  const fill = target > 0 ? Math.min(grams / target, 1) : 0;
   return (
     <View style={styles.stat}>
       <Ionicons name={icon} size={22} color={color} style={styles.statIcon} />
-      <View>
-        <Text style={styles.statLabel}>{label}</Text>
-        <Text style={styles.statValue}>
-          {Math.round(grams)} {t.macros.g} · {percent}%
+      <View style={{ flex: 1 }}>
+        <Text style={styles.statLabel}>
+          {label} · {percent}%
         </Text>
+        <Text style={styles.statValue}>
+          {Math.round(grams)} / {target} {t.macros.g}
+        </Text>
+        <View style={styles.barTrack}>
+          <View style={[styles.barFill, { width: `${fill * 100}%`, backgroundColor: color }]} />
+        </View>
       </View>
     </View>
   );
 }
-
 export default function MacrosCard() {
   const router = useRouter();
   const { macros } = useFood();
+  const { macroTargets: targets } = useProfile();
 
   // Calories from each macro (protein 4, carbs 4, fat 9 kcal per gram)
   const cal = {
@@ -109,6 +117,8 @@ export default function MacrosCard() {
             label={t.macros.protein}
             grams={macros.protein}
             percent={Math.round(share(cal.protein) * 100)}
+            target={targets.protein}   // Protein Stat
+
           />
           <Stat
             icon="leaf"
@@ -116,6 +126,8 @@ export default function MacrosCard() {
             label={t.macros.carbs}
             grams={macros.carbs}
             percent={Math.round(share(cal.carbs) * 100)}
+            target={targets.carbs}     // Carbs Stat
+
           />
           <Stat
             icon="water"
@@ -123,6 +135,7 @@ export default function MacrosCard() {
             label={t.macros.fat}
             grams={macros.fat}
             percent={Math.round(share(cal.fat) * 100)}
+            target={targets.fat}       // Fat Stat
           />
         </View>
       </View>
@@ -144,4 +157,6 @@ const styles = StyleSheet.create({
   statIcon: { width: 32 },
   statLabel: { fontSize: 12, color: '#666' },
   statValue: { fontSize: 16, fontWeight: '700' },
+  barTrack: { height: 6, borderRadius: 3, backgroundColor: '#d6e4fb', marginTop: 4, overflow: 'hidden' },
+  barFill: { height: 6, borderRadius: 3 },
 });

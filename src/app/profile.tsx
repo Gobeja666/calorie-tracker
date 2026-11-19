@@ -14,7 +14,7 @@ const ACTIVITIES: ActivityLevel[] = ['sedentary', 'light', 'moderate', 'active']
 
 export default function ProfileScreen() {
   const router = useRouter();
-  const { profile, saveProfile } = useProfile();
+  const { profile, saveProfile, macroGoals, setMacroGoals, autoMacroTargets } = useProfile();
 
   const dobParts = profile?.dateOfBirth?.split('-') ?? [];
   const [day, setDay] = useState(dobParts[2] ? String(parseInt(dobParts[2], 10)) : '');
@@ -31,6 +31,13 @@ export default function ProfileScreen() {
   const [customGoal, setCustomGoal] = useState(
     profile?.customGoal ? String(profile.customGoal) : ''
   );
+const [pGoal, setPGoal] = useState(macroGoals.protein ? String(macroGoals.protein) : '');
+const [cGoal, setCGoal] = useState(macroGoals.carbs ? String(macroGoals.carbs) : '');
+const [fGoal, setFGoal] = useState(macroGoals.fat ? String(macroGoals.fat) : '');
+const parseG = (v: string) => {
+  const n = parseFloat(v.replace(',', '.'));
+  return n > 0 && n <= 1000 ? Math.round(n) : undefined;
+};
   const cg = parseFloat(customGoal.replace(',', '.'));
   const customValue = cg >= 800 && cg <= 10000 ? Math.round(cg) : undefined;
 
@@ -78,6 +85,7 @@ export default function ProfileScreen() {
       activityLevel,
       customGoal: customValue,
     });
+    setMacroGoals({ protein: parseG(pGoal), carbs: parseG(cGoal), fat: parseG(fGoal) });
     router.replace('/settings');
   }
 
@@ -202,6 +210,34 @@ export default function ProfileScreen() {
             onChangeText={setCustomGoal}
           />
           <Text style={styles.hint}>{t.profile.customGoalHint}</Text>
+        </View>
+
+        <View style={styles.card}>
+          <Text style={styles.label}>{t.profile.customMacros}</Text>
+          <View style={{ flexDirection: 'row', gap: 8 }}>
+            <TextInput
+              style={[styles.input, { flex: 1, minWidth: 0 }]}
+              keyboardType="numeric"
+              placeholder={`${t.macros.protein} ${autoMacroTargets.protein}`}
+              value={pGoal}
+              onChangeText={setPGoal}
+            />
+            <TextInput
+              style={[styles.input, { flex: 1, minWidth: 0 }]}
+              keyboardType="numeric"
+              placeholder={`${t.macros.carbs} ${autoMacroTargets.carbs}`}
+              value={cGoal}
+              onChangeText={setCGoal}
+            />
+            <TextInput
+              style={[styles.input, { flex: 1, minWidth: 0 }]}
+              keyboardType="numeric"
+              placeholder={`${t.macros.fat} ${autoMacroTargets.fat}`}
+              value={fGoal}
+              onChangeText={setFGoal}
+            />
+          </View>
+          <Text style={styles.hint}>{t.profile.customMacrosHint}</Text>
         </View>
 
         <View style={styles.result}>

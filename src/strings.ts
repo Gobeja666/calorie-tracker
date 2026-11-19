@@ -102,6 +102,8 @@ export const t = {
     } as Record<string, string>,
     customGoal: 'Custom daily goal (optional)',
     customGoalHint: 'Leave empty to use the plan above',
+    customMacros: 'Custom macro goals in grams (optional)',
+    customMacrosHint: 'Leave empty to use automatic targets',
   },
 
   // Weight tracking (Today page)

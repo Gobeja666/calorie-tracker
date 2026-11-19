@@ -16,6 +16,7 @@ export type Profile = {
   activityLevel: ActivityLevel;
   customGoal?: number; // kcal/day
 };
+export type MacroGoals = { protein?: number; carbs?: number; fat?: number };
 
 const DEFAULT_GOAL = 1200;
 
@@ -71,10 +72,23 @@ export function calculateGoal(p: Profile): number {
     : calculatePlanGoal(p);
 }
 
+// Daily gram targets: protein by body weight, fat 25% of kcal, carbs fill the rest
+export function calculateMacroTargets(goal: number, p: Profile | null) {
+  const perKg = p?.goalType === 'lose' ? 2.0 : p?.goalType === 'gain' ? 1.8 : 1.6;
+  const protein = p ? Math.round(p.weight * perKg) : Math.round((goal * 0.3) / 4);
+  const fat = Math.round((goal * 0.25) / 9);
+  const carbs = Math.max(Math.round((goal - protein * 4 - fat * 9) / 4), 0);
+  return { protein, carbs, fat };
+}
+
 type ProfileContextType = {
   profile: Profile | null;
   goal: number;
   saveProfile: (p: Profile) => void;
+  macroGoals: MacroGoals;
+  setMacroGoals: (g: MacroGoals) => void;
+  autoMacroTargets: { protein: number; carbs: number; fat: number };
+  macroTargets: { protein: number; carbs: number; fat: number };
 };
 
 const ProfileContext = createContext<ProfileContextType | null>(null);
@@ -82,6 +96,13 @@ const ProfileContext = createContext<ProfileContextType | null>(null);
 export function ProfileProvider({ children }: { children: ReactNode }) {
   const [profile, setProfile] = usePersistentState<Profile | null>('profile', null);
   const goal = profile ? calculateGoal(profile) : DEFAULT_GOAL;
+  const [macroGoals, setMacroGoals] = usePersistentState<MacroGoals>('macroGoals', {}, true);
+  const autoMacroTargets = calculateMacroTargets(goal, profile);
+  const macroTargets = {
+    protein: macroGoals.protein ?? autoMacroTargets.protein,
+    carbs: macroGoals.carbs ?? autoMacroTargets.carbs,
+    fat: macroGoals.fat ?? autoMacroTargets.fat,
+  };
 
   const { session, loading } = useAuth();
   const userId = session?.user.id;
@@ -137,7 +158,7 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
   }
 
   return (
-    <ProfileContext.Provider value={{ profile, goal, saveProfile }}>
+    <ProfileContext.Provider   value={{ profile, goal, saveProfile, macroGoals, setMacroGoals, autoMacroTargets, macroTargets }}>
       {children}
     </ProfileContext.Provider>
   );
